@@ -6,4 +6,4 @@
 .idea/vcs.xml
 Code-Socket.iml
 src/stream/EchoClient2.java
-out/production/Code-Socket/stream/ClientThread.class
+out/production/Code-Socket/stream/.class
