@@ -43,11 +43,10 @@ public class EchoClient {
         } catch (IOException e) {
             System.err.println("Couldn't get I/O for "
                                + "the connection to:"+ args[0]);
-            System.err.println(e);
             System.exit(1);
         }
                              
-        String line="";
+        String line;
         while (true) {
         	line=stdIn.readLine();
         	if (line.equals(".")) break;
