@@ -21,12 +21,12 @@ public class EchoClient {
     public static void main(String[] args) throws IOException {
 
         Socket echoSocket = null;
-        PrintStream socOut = null;
+        PrintStream socOut = null; //flux d'écriture
         BufferedReader stdIn = null;
-        BufferedReader socIn = null;
+        BufferedReader socIn = null; //flux de lecture
 
-        if (args.length != 2) {
-          System.out.println("Usage: java EchoClient <EchoServer host> <EchoServer port>");
+        if (args.length != 3) {
+            System.out.println("Usage: java EchoClient <EchoServer host> <EchoServer port> <Client username>");
           System.exit(1);
         }
 
@@ -36,6 +36,9 @@ public class EchoClient {
 	        socIn = new BufferedReader( new InputStreamReader(echoSocket.getInputStream()));
 	        socOut= new PrintStream(echoSocket.getOutputStream());
 	        stdIn = new BufferedReader(new InputStreamReader(System.in));
+
+            socOut.println(args[2]); //send the username to the out flow
+
         } catch (UnknownHostException e) {
             System.err.println("Don't know about host:" + args[0]);
             System.exit(1);

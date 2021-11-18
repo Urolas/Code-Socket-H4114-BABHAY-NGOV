@@ -14,8 +14,11 @@ import java.util.List;
 public class ClientThread
 	extends Thread {
 	
-	private Socket clientSocket;
-	
+	private Socket clientSocket; //socket
+	private BufferedReader socIn; //reader flow
+	private PrintStream socOut; //writer flow
+
+	private String username; //the client's username (because can't be stock in socket)
 	ClientThread(Socket s) {
 		this.clientSocket = s;
 	}
@@ -25,19 +28,22 @@ public class ClientThread
   	**/
 	public void run() {
     	  try {
-			  BufferedReader socIn = new BufferedReader( new InputStreamReader(clientSocket.getInputStream()));
-			  PrintStream socOut = new PrintStream(clientSocket.getOutputStream());
+			  socIn = new BufferedReader( new InputStreamReader(clientSocket.getInputStream()));
+			  socOut = new PrintStream(clientSocket.getOutputStream());
+
+			  username = socIn.readLine(); //get the first line of the flow: the client's username
+
 			  while (true) {
 				  String line = socIn.readLine();
 				  socOut.println(line);
-				  System.out.println(line);
+				  System.out.println(reformatMsg(line)); //print the message on EchoServer
 
 				  // /show online command to show everybody connected on the server
 				  if(line.equals("/show online")){
 					  System.out.println("Users online: ");
 					  List<ClientThread> listClients =  EchoServerMultiThreaded.getClientThreadList();
 					  for (ClientThread c : listClients){
-						  String username = c.clientSocket.getInetAddress().toString();
+						  String username = c.getUsername();
 						  System.out.println(username);
 					  }
 				  }
@@ -46,6 +52,14 @@ public class ClientThread
 			  System.err.println("Error in EchoServer:" + e);
         }
        }
+
+   	public String reformatMsg(String line){
+		return (username + " : \" "+line+" \"");
+  	}
+
+	public String getUsername() {
+		return username;
+	}
   
   }
 

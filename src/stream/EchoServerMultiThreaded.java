@@ -18,7 +18,6 @@ public class EchoServerMultiThreaded  {
 	private static List<ClientThread> clientThreadList = new ArrayList<>();
  	/**
   	* main method
-	* @param EchoServer port
   	* 
   	**/
 	 public static void main(String args[]){
@@ -35,9 +34,9 @@ public class EchoServerMultiThreaded  {
 			System.out.println("Server ready...");
 			while (true) {
 				Socket clientSocket = listenSocket.accept();
-				System.out.println("Connexion from:" + clientSocket.getInetAddress());
 				ClientThread ct = new ClientThread(clientSocket);
 				ct.start();
+				System.out.println("Connexion from: " + clientSocket.getInetAddress() + " " +ct.getUsername());
 				clientThreadList.add(ct);
 			}
 			} catch (Exception e) {;
@@ -47,6 +46,10 @@ public class EchoServerMultiThreaded  {
 
 	public static List<ClientThread> getClientThreadList() {
 		return clientThreadList;
+	}
+
+	public static ClientThread getUserByUsername(String username){
+		 return clientThreadList.get(0);
 	}
 }
 

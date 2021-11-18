@@ -24,8 +24,8 @@ public class EchoClient2 {
         BufferedReader stdIn = null;
         BufferedReader socIn = null;
 
-        if (args.length != 2) {
-            System.out.println("Usage: java EchoClient <EchoServer host> <EchoServer port>");
+        if (args.length != 3) {
+            System.out.println("Usage: java EchoClient <EchoServer host> <EchoServer port> <Client username>");
             System.exit(1);
         }
 
@@ -35,6 +35,9 @@ public class EchoClient2 {
             socIn = new BufferedReader( new InputStreamReader(echoSocket.getInputStream()));
             socOut= new PrintStream(echoSocket.getOutputStream());
             stdIn = new BufferedReader(new InputStreamReader(System.in));
+
+            socOut.println(args[2]); //send the username to the out flow
+
         } catch (UnknownHostException e) {
             System.err.println("Don't know about host:" + args[0]);
             System.exit(1);
