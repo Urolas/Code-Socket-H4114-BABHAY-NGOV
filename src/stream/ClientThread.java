@@ -44,9 +44,19 @@ public class ClientThread
 					  List<ClientThread> listClients =  EchoServerMultiThreaded.getClientThreadList();
 					  for (ClientThread c : listClients){
 						  String username = c.getUsername();
-						  System.out.println(username);
+						  System.out.println(username + " " + clientSocket.getInetAddress());
 					  }
 				  }
+
+				  if(line.startsWith("/msg ")){
+					  String name = line.split(" ")[1];
+					  String message = line.substring(line.indexOf(name) + name.length() + 1);
+					  ClientThread receiver = EchoServerMultiThreaded.getUserByUsername(name);
+					  System.out.println(username+ " to "+ name+ " : \""+message+"\"");
+				  }
+
+
+
 			  }
     	} catch (Exception e) {
 			  System.err.println("Error in EchoServer:" + e);

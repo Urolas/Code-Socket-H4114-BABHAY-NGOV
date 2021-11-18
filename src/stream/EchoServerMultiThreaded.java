@@ -23,7 +23,7 @@ public class EchoServerMultiThreaded  {
 	 public static void main(String args[]){
 
         ServerSocket listenSocket;
-
+		MessageSenderThread mst;
         
 		if (args.length != 1) {
 			  System.out.println("Usage: java EchoServer <EchoServer port>");
@@ -31,12 +31,13 @@ public class EchoServerMultiThreaded  {
 		}
 		try {
 			listenSocket = new ServerSocket(Integer.parseInt(args[0])); //port
+			mst = new MessageSenderThread();
 			System.out.println("Server ready...");
 			while (true) {
 				Socket clientSocket = listenSocket.accept();
 				ClientThread ct = new ClientThread(clientSocket);
 				ct.start();
-				System.out.println("Connexion from: " + clientSocket.getInetAddress() + " " +ct.getUsername());
+				System.out.println("Connexion from: " + clientSocket.getInetAddress());
 				clientThreadList.add(ct);
 			}
 			} catch (Exception e) {;
@@ -49,7 +50,13 @@ public class EchoServerMultiThreaded  {
 	}
 
 	public static ClientThread getUserByUsername(String username){
-		 return clientThreadList.get(0);
+
+		 for (ClientThread client : clientThreadList){
+			 if(client.getUsername() == username){
+				 return client;
+			 }
+		 }
+		 return null;
 	}
 }
 
