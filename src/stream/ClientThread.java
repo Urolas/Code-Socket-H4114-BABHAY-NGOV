@@ -10,6 +10,7 @@ package stream;
 import java.io.*;
 import java.net.*;
 import java.util.List;
+import java.time.LocalDateTime;
 
 public class ClientThread
 	extends Thread {
@@ -38,7 +39,7 @@ public class ClientThread
 
 			  while (true) {
 				  String line = socIn.readLine();
-				  System.out.println(reformatMsg(line)); //print the message on EchoServer
+				  System.out.println(reformatMsg(line,username)); //print the message on EchoServer
 
 				  // /show online command to show everybody connected on the server
 				  if(line.equals("/show all")){
@@ -60,7 +61,8 @@ public class ClientThread
 					  if(receiver.clientSocket==clientSocket) {
 						  socOut.println("You can't send a message to yourself!");
 					  }else if(receiver.clientSocket != null){
-						  receiver.socOut.println(reformatMsg(message));
+						  receiver.socOut.println(reformatMsg(message,username));
+						  socOut.println(reformatMsg(message,"You"));
 					  }else{
 						  socOut.println("This username doesn't exist or isn't online");
 					  }
@@ -82,8 +84,11 @@ public class ClientThread
         }
        }
 
-   	public String reformatMsg(String line){
-		return (username + " : \" "+line+" \"");
+   	public String reformatMsg(String line, String username){
+		LocalDateTime now = LocalDateTime.now();
+		int hour = now.getHour();
+		int minute = now.getMinute();
+		return ("["+hour+":"+minute+"] "+ username + " : \" "+line+" \"");
   	}
 
 	public String getUsername() {
