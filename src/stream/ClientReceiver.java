@@ -22,7 +22,8 @@ public class ClientReceiver extends Thread{
                 System.out.println(socIn.readLine());
             }
         }catch(Exception e){
-            System.err.println("Error in Client Receiver:" + e);
+                System.out.println("Disconnected");
         }
     }
+
 }

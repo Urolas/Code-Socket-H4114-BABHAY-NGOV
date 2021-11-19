@@ -39,8 +39,8 @@ public class ClientThread
 				  System.out.println(reformatMsg(line,username)); //print the message on EchoServer
 
 				  // /show online command to show everybody connected on the server
-				  if(line.equals("/show online")){
-					  System.out.println("Users online: ");
+				  if(line.equals("/show all")){
+					  socOut.println("Users online: ");
 					  List<ClientThread> listClients =  EchoServerMultiThreaded.getClientThreadList();
 					  for (ClientThread c : listClients){
 						  String username = c.getUsername();
@@ -63,6 +63,11 @@ public class ClientThread
 						  socOut.println("This username doesn't exist or isn't online");
 					  }
 
+				  }
+
+				  if(line.equals("/quit")){
+					  EchoServerMultiThreaded.removeClientFromThreadList(this);
+					  return;
 				  }
 
 
