@@ -35,7 +35,6 @@ public class ClientThread
 
 			  while (true) {
 				  String line = socIn.readLine();
-				  socOut.println(line);
 				  System.out.println(reformatMsg(line)); //print the message on EchoServer
 
 				  // /show online command to show everybody connected on the server
@@ -54,10 +53,10 @@ public class ClientThread
 					  ClientThread receiver = EchoServerMultiThreaded.getUserByUsername(name);
 					  System.out.println(username+ " to "+ name+ " : \""+message+"\"");
 
-					  if(receiver!= null) {
-						  receiver.socOut.println(reformatMsg(message));
-					  }if(receiver.clientSocket==clientSocket){
+					  if(receiver.clientSocket==clientSocket) {
 						  socOut.println("You can't send a message to yourself!");
+					  }else if(receiver.clientSocket != null){
+						  receiver.socOut.println(reformatMsg(message));
 					  }else{
 						  socOut.println("This username doesn't exist or isn't online");
 					  }
