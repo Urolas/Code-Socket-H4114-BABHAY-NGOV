@@ -53,6 +53,10 @@ public class ClientThread
 					  String message = line.substring(line.indexOf(name) + name.length() + 1);
 					  ClientThread receiver = EchoServerMultiThreaded.getUserByUsername(name);
 					  System.out.println(username+ " to "+ name+ " : \""+message+"\"");
+
+					  //send the message to receiver
+					  receiver.socOut.println(reformatMsg(message));
+
 				  }
 
 

@@ -52,7 +52,7 @@ public class EchoServerMultiThreaded  {
 	public static ClientThread getUserByUsername(String username){
 
 		 for (ClientThread client : clientThreadList){
-			 if(client.getUsername() == username){
+			 if(client.getUsername().equals(username)){
 				 return client;
 			 }
 		 }
