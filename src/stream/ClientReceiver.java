@@ -9,7 +9,10 @@ import java.net.UnknownHostException;
 
 public class ClientReceiver extends Thread{
     private Socket clientSocket; //socket
-    public ClientReceiver(Socket s){
+    private BufferedReader socIn; //reader flow
+    private PrintStream socOut; //writer flow
+
+    public ClientReceiver(Socket s,BufferedReader socIn){
 
     }
 }
