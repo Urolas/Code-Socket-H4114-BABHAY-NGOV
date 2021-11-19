@@ -24,7 +24,7 @@ public class ClientThread
 	public static final String ANSI_PURPLE = "\u001B[35m";
 	public static final String ANSI_CYAN = "\u001B[36m";
 	public static final String ANSI_WHITE = "\u001B[37m";
-	public static final String ANSI_OFF = "\033[0m";
+
 
 	private Socket clientSocket; //socket
 	private BufferedReader socIn; //reader flow
@@ -92,7 +92,7 @@ public class ClientThread
 		LocalDateTime now = LocalDateTime.now();
 		int hour = now.getHour();
 		int minute = now.getMinute();
-		return (ANSI_BLUE+" ["+hour+":"+minute+"] "+ username + ANSI_OFF + " : "+line);
+		return (ANSI_BLUE+" ["+hour+":"+minute+"] "+ username + ANSI_RESET + " : "+line);
   	}
 
 	public String getUsername() {
