@@ -19,6 +19,9 @@ public class ClientThread
 	private PrintStream socOut; //writer flow
 
 	private String username; //the client's username (because can't be stock in socket)
+	private ClientThread lastContact=null;
+
+	//Constructor
 	ClientThread(Socket s) {
 		this.clientSocket = s;
 	}
@@ -47,7 +50,8 @@ public class ClientThread
 					  }
 				  }
 
-				  if(line.startsWith("/msg ")){
+				  //send a private message to someone
+				  if(line.startsWith("/msg ") || line.startsWith("/r ") ){
 					  String name = line.split(" ")[1];
 					  String message = line.substring(line.indexOf(name) + name.length() + 1);
 					  ClientThread receiver = EchoServerMultiThreaded.getUserByUsername(name);
@@ -63,6 +67,8 @@ public class ClientThread
 
 				  }
 
+
+				  //leave the chat
 				  if(line.equals("/quit")){
 					  EchoServerMultiThreaded.removeClientFromThreadList(this);
 					  return;
