@@ -24,6 +24,7 @@ public class EchoClient {
         PrintStream socOut = null; //flux d'écriture
         BufferedReader stdIn = null;
         BufferedReader socIn = null; //flux de lecture
+        ClientReceiver cR = null; //read received messages
 
         if (args.length != 2) {
             System.out.println("Usage: java EchoClient <EchoServer host> <EchoServer port>");
@@ -39,7 +40,7 @@ public class EchoClient {
 	        socOut= new PrintStream(echoSocket.getOutputStream());
 	        stdIn = new BufferedReader(new InputStreamReader(System.in));
 
-            ClientReceiver cR = new ClientReceiver(echoSocket,socIn,socOut);
+            cR = new ClientReceiver(echoSocket,socIn,socOut);
             cR.start();
 
             System.out.print("Insert username :");
@@ -60,6 +61,9 @@ public class EchoClient {
         	line=stdIn.readLine();
         	if (line.equals(".")) break;
         	socOut.println(line);
+            if(line.trim().equals("/quit")){
+                break;
+            }
         }
       socOut.close();
       socIn.close();

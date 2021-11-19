@@ -56,6 +56,10 @@ public class EchoServerMultiThreaded  {
 		 }
 		 return null;
 	}
+
+	public static void removeClientFromThreadList(ClientThread ct){
+		clientThreadList.removeIf((ClientThread removableClient) -> removableClient == ct);
+	}
 }
 
   
