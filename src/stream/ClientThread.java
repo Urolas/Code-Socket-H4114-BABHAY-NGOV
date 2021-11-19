@@ -56,6 +56,8 @@ public class ClientThread
 
 					  if(receiver!= null) {
 						  receiver.socOut.println(reformatMsg(message));
+					  }if(receiver.clientSocket==clientSocket){
+						  socOut.println("You can't send a message to yourself!");
 					  }else{
 						  socOut.println("This username doesn't exist or isn't online");
 					  }
