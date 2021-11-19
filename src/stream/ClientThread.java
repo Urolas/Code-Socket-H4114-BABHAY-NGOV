@@ -31,7 +31,7 @@ public class ClientThread
 			  socIn = new BufferedReader( new InputStreamReader(clientSocket.getInputStream()));
 			  socOut = new PrintStream(clientSocket.getOutputStream());
 
-			  username = socIn.readLine(); //get the first line of the flow: the client's username
+			  username = socIn.readLine().trim(); //get the first line of the flow: the client's username
 
 			  while (true) {
 				  String line = socIn.readLine();
@@ -54,8 +54,11 @@ public class ClientThread
 					  ClientThread receiver = EchoServerMultiThreaded.getUserByUsername(name);
 					  System.out.println(username+ " to "+ name+ " : \""+message+"\"");
 
-					  //send the message to receiver
-					  receiver.socOut.println(reformatMsg(message));
+					  if(receiver!= null) {
+						  receiver.socOut.println(reformatMsg(message));
+					  }else{
+						  socOut.println("This username doesn't exist or isn't online");
+					  }
 
 				  }
 
