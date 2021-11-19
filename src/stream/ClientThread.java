@@ -14,7 +14,18 @@ import java.time.LocalDateTime;
 
 public class ClientThread
 	extends Thread {
-	
+
+	public static final String ANSI_RESET = "\u001B[0m";
+	public static final String ANSI_BLACK = "\u001B[30m";
+	public static final String ANSI_RED = "\u001B[31m";
+	public static final String ANSI_GREEN = "\u001B[32m";
+	public static final String ANSI_YELLOW = "\u001B[33m";
+	public static final String ANSI_BLUE = "\u001B[34m";
+	public static final String ANSI_PURPLE = "\u001B[35m";
+	public static final String ANSI_CYAN = "\u001B[36m";
+	public static final String ANSI_WHITE = "\u001B[37m";
+	public static final String ANSI_OFF = "\033[0m";
+
 	private Socket clientSocket; //socket
 	private BufferedReader socIn; //reader flow
 	private PrintStream socOut; //writer flow
@@ -58,11 +69,10 @@ public class ClientThread
 						  socOut.println("You can't send a message to yourself!");
 					  }else if(receiver.clientSocket != null){
 						  receiver.socOut.println(reformatMsg(message,username));
-						  socOut.println(reformatMsg(message,"You"));
+						  socOut.println(reformatMsg(message,"You to "+receiver.getUsername()));
 					  }else{
 						  socOut.println("This username doesn't exist or isn't online");
 					  }
-
 				  }
 
 				  if(line.equals("/quit")){
@@ -82,7 +92,7 @@ public class ClientThread
 		LocalDateTime now = LocalDateTime.now();
 		int hour = now.getHour();
 		int minute = now.getMinute();
-		return ("["+hour+":"+minute+"] "+ username + " : \" "+line+" \"");
+		return (ANSI_BLUE+" ["+hour+":"+minute+"] "+ username + ANSI_OFF + " : "+line);
   	}
 
 	public String getUsername() {
