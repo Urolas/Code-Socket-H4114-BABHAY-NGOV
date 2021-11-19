@@ -23,7 +23,6 @@ public class EchoServerMultiThreaded  {
 	 public static void main(String args[]){
 
         ServerSocket listenSocket;
-		MessageSenderThread mst;
         
 		if (args.length != 1) {
 			  System.out.println("Usage: java EchoServer <EchoServer port>");
@@ -31,7 +30,6 @@ public class EchoServerMultiThreaded  {
 		}
 		try {
 			listenSocket = new ServerSocket(Integer.parseInt(args[0])); //port
-			mst = new MessageSenderThread();
 			System.out.println("Server ready...");
 			while (true) {
 				Socket clientSocket = listenSocket.accept();
