@@ -44,7 +44,7 @@ public class ClientThread
 					  List<ClientThread> listClients =  EchoServerMultiThreaded.getClientThreadList();
 					  for (ClientThread c : listClients){
 						  String username = c.getUsername();
-						  System.out.println(username + " " + clientSocket.getInetAddress());
+						  socOut.println(username + " " + clientSocket.getInetAddress());
 					  }
 				  }
 
