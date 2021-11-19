@@ -32,10 +32,12 @@ public class ClientThread
 
 	private String username; //the client's username (because can't be stock in socket)
 	private ClientThread lastContact=null;
+	private String lastMessageUsername;
 
 	//Constructor
 	ClientThread(Socket s) {
 		this.clientSocket = s;
+		this.lastMessageUsername = "";
 	}
 
  	/**
@@ -63,9 +65,17 @@ public class ClientThread
 				  }
 
 				  //send a private message to someone
-				  if(line.startsWith("/msg ") || line.startsWith("/r ") ){
-					  String name = line.split(" ")[1];
-					  String message = line.substring(line.indexOf(name) + name.length() + 1);
+				  if(line.startsWith("/msg ") || line.startsWith("/r ")){
+					  String name = "";
+					  String message = "";
+					  if (line.startsWith("/msg ")){
+						  name = line.split(" ")[1];
+						  message = line.substring(line.indexOf(name) + name.length() + 1);
+					  }else if (line.startsWith("/r ")){
+						  name = lastMessageUsername;
+						  message = line.substring(3);
+					  }
+
 					  ClientThread receiver = EchoServerMultiThreaded.getUserByUsername(name);
 					  System.out.println(username+ " to "+ name+ " : \""+message+"\"");
 
@@ -73,11 +83,13 @@ public class ClientThread
 						  socOut.println("You can't send a message to yourself!");
 					  }else if(receiver.clientSocket != null){
 						  receiver.socOut.println(reformatMsg(message,username));
+						  receiver.setLastMessageUsername(username);
 						  socOut.println(reformatMsg(message,"You to "+receiver.getUsername()));
 					  }else{
 						  socOut.println("This username doesn't exist or isn't online");
 					  }
 				  }
+
 
 
 				  //leave the chat
@@ -104,7 +116,10 @@ public class ClientThread
 	public String getUsername() {
 		return username;
 	}
-  
-  }
+
+	public void setLastMessageUsername(String lastMessageUsername) {
+		this.lastMessageUsername = lastMessageUsername;
+	}
+}
 
   
