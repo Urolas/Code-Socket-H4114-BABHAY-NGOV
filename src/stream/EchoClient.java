@@ -44,7 +44,7 @@ public class EchoClient {
 
             System.out.print("Insert username :");
             socOut.println(stdIn.readLine()); //send the username to the out flow
-            System.out.print("Successfully connected. Welcome to chat!");
+            System.out.println("Successfully connected. Welcome to chat!");
 
         } catch (UnknownHostException e) {
             System.err.println("Don't know about host:" + args[0]);
