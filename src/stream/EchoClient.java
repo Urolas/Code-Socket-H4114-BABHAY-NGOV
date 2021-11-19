@@ -31,11 +31,16 @@ public class EchoClient {
         }
 
         try {
+
+
       	    // creation socket ==> connexion
       	    echoSocket = new Socket(args[0],new Integer(args[1]).intValue());
 	        socIn = new BufferedReader( new InputStreamReader(echoSocket.getInputStream()));
 	        socOut= new PrintStream(echoSocket.getOutputStream());
 	        stdIn = new BufferedReader(new InputStreamReader(System.in));
+
+            ClientReceiver cR = new ClientReceiver(echoSocket,socIn,socOut);
+            cR.start();
 
             System.out.print("Insert username :");
             socOut.println(stdIn.readLine()); //send the username to the out flow
@@ -51,11 +56,9 @@ public class EchoClient {
                              
         String line;
         while (true) {
-
         	line=stdIn.readLine();
         	if (line.equals(".")) break;
         	socOut.println(line);
-        	System.out.println("echo: " + socIn.readLine());
         }
       socOut.close();
       socIn.close();
