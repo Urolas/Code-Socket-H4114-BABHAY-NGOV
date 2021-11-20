@@ -79,12 +79,19 @@ public class ClientThread
 					  ClientThread receiver = EchoServerMultiThreaded.getUserByUsername(name);
 					  System.out.println(username+ " to "+ name+ " : \""+message+"\"");
 
-					  if(receiver.clientSocket==clientSocket) {
+					  //If they send a message to their own username
+					  if(receiver!=null && receiver.clientSocket==clientSocket) {
 						  socOut.println("You can't send a message to yourself!");
-					  }else if(receiver.clientSocket != null){
+
+					  //If there's no problem
+					  }else if(receiver!=null && receiver.clientSocket != null){
 						  receiver.socOut.println(reformatMsg(message,username));
+						  LogManager.writeOnUserLog(receiver.getUsername(), reformatMsgForLog(message,username));
 						  receiver.setLastMessageUsername(username);
 						  socOut.println(reformatMsg(message,"You to "+receiver.getUsername()));
+						  LogManager.writeOnUserLog(username,reformatMsgForLog(message,"You to "+receiver.getUsername()));
+
+					  //If the username isn't online
 					  }else{
 						  socOut.println("This username doesn't exist or isn't online");
 					  }
@@ -112,6 +119,13 @@ public class ClientThread
 		int minute = now.getMinute();
 		return (ANSI_BLUE+" ["+hour+":"+minute+"] "+ username + ANSI_RESET + " : "+line);
   	}
+
+	public String reformatMsgForLog(String line, String username){
+		LocalDateTime now = LocalDateTime.now();
+		int hour = now.getHour();
+		int minute = now.getMinute();
+		return (" ["+hour+":"+minute+"] "+ username + " : "+line);
+	}
 
 	public String getUsername() {
 		return username;

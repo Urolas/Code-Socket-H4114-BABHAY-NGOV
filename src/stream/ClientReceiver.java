@@ -19,7 +19,8 @@ public class ClientReceiver extends Thread{
     public void run() {
         try {
             while(true){
-                System.out.println(socIn.readLine());
+                String line = socIn.readLine();
+                System.out.println(line);
             }
         }catch(Exception e){
                 System.out.println("Disconnected");

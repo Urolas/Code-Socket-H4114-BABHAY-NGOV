@@ -44,8 +44,10 @@ public class EchoClient {
             cR.start();
 
             System.out.print("Insert username :");
-            socOut.println(stdIn.readLine()); //send the username to the out flow
-            System.out.println("Successfully connected. Welcome to chat!");
+            String user;
+            socOut.println(user = stdIn.readLine()); //send the username to the out flow
+            System.out.println("Successfully connected. Welcome to chat "+user+" !");
+            LogManager.findNameInFile(user);
 
         } catch (UnknownHostException e) {
             System.err.println("Don't know about host:" + args[0]);
