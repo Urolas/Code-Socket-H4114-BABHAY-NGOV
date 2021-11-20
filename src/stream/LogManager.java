@@ -58,5 +58,24 @@ public class LogManager {
         }
     }
 
+    //read the log file
+    public static String getHistory(String username){
+        String log="";
+
+        try(FileReader fileReader = new FileReader("logFiles/Log_"+username+".txt")) {
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                log += line+"\n";
+            }
+        } catch (FileNotFoundException e) {
+            System.err.println(e);
+        } catch (IOException e) {
+            System.err.println(e);
+        }
+
+        return log;
+    }
+
 
 }

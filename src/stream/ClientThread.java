@@ -55,7 +55,7 @@ public class ClientThread
 				  System.out.println(reformatMsg(line,username)); //print the message on EchoServer
 
 				  // /show online command to show everybody connected on the server
-				  if(line.equals("/show all")){
+				  if(line.equals("/online")){
 					  socOut.println("Users online: ");
 					  List<ClientThread> listClients =  EchoServerMultiThreaded.getClientThreadList();
 					  for (ClientThread c : listClients){
@@ -86,10 +86,10 @@ public class ClientThread
 					  //If there's no problem
 					  }else if(receiver!=null && receiver.clientSocket != null){
 						  receiver.socOut.println(reformatMsg(message,username));
-						  LogManager.writeOnUserLog(receiver.getUsername(), reformatMsgForLog(message,username));
+						  LogManager.writeOnUserLog(receiver.getUsername(), reformatMsg(message,username));
 						  receiver.setLastMessageUsername(username);
 						  socOut.println(reformatMsg(message,"You to "+receiver.getUsername()));
-						  LogManager.writeOnUserLog(username,reformatMsgForLog(message,"You to "+receiver.getUsername()));
+						  LogManager.writeOnUserLog(username,reformatMsg(message,"You to "+receiver.getUsername()));
 
 					  //If the username isn't online
 					  }else{
@@ -97,7 +97,10 @@ public class ClientThread
 					  }
 				  }
 
-
+				  if(line.equals("/history")){
+					  String history = LogManager.getHistory(username);
+					  socOut.println(history);
+				  }
 
 				  //leave the chat
 				  if(line.equals("/quit")){
@@ -120,12 +123,6 @@ public class ClientThread
 		return (ANSI_BLUE+" ["+hour+":"+minute+"] "+ username + ANSI_RESET + " : "+line);
   	}
 
-	public String reformatMsgForLog(String line, String username){
-		LocalDateTime now = LocalDateTime.now();
-		int hour = now.getHour();
-		int minute = now.getMinute();
-		return (" ["+hour+":"+minute+"] "+ username + " : "+line);
-	}
 
 	public String getUsername() {
 		return username;
