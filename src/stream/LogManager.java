@@ -27,8 +27,9 @@ public class LogManager {
         //if the user doesn't exist, create a Log file for them
         if(!found) {
 
-            try (PrintWriter out = new PrintWriter("logFiles/allUsers.txt")) {
-                out.println(username);
+            try (FileWriter fw = new FileWriter("logFiles/allUsers.txt",true)) {
+                fw.write(username+"\n"); //appends the new username to the file
+                fw.close();
 
                 //and create the file
                 File newFile = new File("logFiles/Log_"+username+".txt");
@@ -46,8 +47,9 @@ public class LogManager {
     //write a new line on the log txt file
     public static void writeOnUserLog(String username, String message){
 
-        try (PrintWriter out = new PrintWriter("logFiles/Log_"+username+".txt")) {
-            out.println(message);
+        try (FileWriter fw = new FileWriter("logFiles/Log_"+username+".txt",true)) {
+            fw.write(message+"\n"); //appends the new username to the file
+            fw.close();
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
