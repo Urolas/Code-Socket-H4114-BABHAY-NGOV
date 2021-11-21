@@ -11,6 +11,8 @@ import java.io.*;
 import java.net.*;
 import java.util.List;
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ClientThread
 	extends Thread {
@@ -97,10 +99,105 @@ public class ClientThread
 					  }
 				  }
 
+				  //show log of the user
 				  if(line.equals("/history")){
 					  String history = LogManager.getHistory(username);
 					  socOut.println(history);
 				  }
+
+				  if(line.startsWith("/group")){
+
+					  //check all group the user is in
+					  if(line.trim().equals("/group")){
+						  String allGroup = LogManager.getUserGroups(username);
+						  socOut.println(allGroup);
+					  }
+
+					  //check who is the owner of a group
+					  else if(line.startsWith("/group members ")){
+						  String groupName = line.split(" ")[2];
+						  socOut.println(LogManager.getGroupMembers(groupName,username));
+
+					  }
+
+					  //create a new group : /group create GroupA
+					  else if(line.startsWith("/group create ")){
+						  String groupName = line.split(" ")[2];
+						  if(LogManager.findGroupInFile(groupName,username)){
+							  socOut.println("Group ["+groupName+"] created");
+						  }else{
+							  socOut.println("Group name already exist");
+						  }
+					  }
+
+					  //add member to a group : /group add GroupA Sara Eric Louis
+					  else if(line.startsWith("/group add ")) {
+
+						  boolean succeed = true;
+						  String groupName = line.split(" ")[2];
+						  //Check if group exist
+						  if (!LogManager.groupExist(groupName)) {
+							  socOut.println("Group name doesn't exist");
+						  } else {
+							  if (!LogManager.isGroupOwner(groupName, username)) {
+								  socOut.println("You don't have the permission to add people to this group");
+
+							  } else {
+								  String[] addedPeople = line.substring(line.indexOf(groupName) + groupName.length() + 1).split(" ");
+
+								  //Check if every username exist
+								  for (String name : addedPeople) {
+									  if (!LogManager.userExist(name)) {
+										  socOut.println("User doesn't exist");
+										  succeed = false;
+										  break;
+									  }
+								  }
+
+								  if (succeed && LogManager.addPeopleToGroup(groupName, addedPeople)) {
+									  socOut.println(Stream.of(addedPeople).collect(Collectors.joining(",")) + " added to group [" + groupName + "]");
+								  }
+
+							  }
+						  }
+
+					  }else if(line.startsWith("/group remove ")){
+
+						  String groupName = line.split(" ")[2];
+						  boolean succeed=true;
+
+						  if (!LogManager.groupExist(groupName)) {
+							  socOut.println("Group name doesn't exist");
+						  } else {
+							  if (!LogManager.isGroupOwner(groupName, username)) {
+								  socOut.println("You don't have the permission to remove people from this group");
+
+							  } else {
+								  String[] removedPeople = line.substring(line.indexOf(groupName) + groupName.length() + 1).split(" ");
+
+								  //Check if every username exist
+								  for (String name : removedPeople) {
+									  if (!LogManager.userExist(name)) {
+										  socOut.println("User doesn't exist");
+										  succeed = false;
+										  break;
+									  }
+								  }
+
+								  if (succeed && LogManager.removePeopleFromGroup(groupName, removedPeople)) {
+									  socOut.println(Stream.of(removedPeople).collect(Collectors.joining(",")) + " removed from group [" + groupName + "]");
+								  }else{
+									  socOut.println("Error: You can't remove a person who doesn't belong to the group or yourself");
+								  }
+
+							  }
+						  }
+
+
+					  }
+				  }
+
+
 
 				  //leave the chat
 				  if(line.equals("/quit")){
