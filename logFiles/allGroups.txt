@@ -1,3 +1,3 @@
-GroupB Miki Tomo
 GroupA Momo Tomo Miki 
 GroupC Miki Momo
+GroupB Miki 

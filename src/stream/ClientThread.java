@@ -35,6 +35,7 @@ public class ClientThread
 	private String username; //the client's username (because can't be stock in socket)
 	private ClientThread lastContact=null;
 	private String lastMessageUsername;
+	private boolean connectingToGroup = false;
 
 	//Constructor
 	ClientThread(Socket s) {
@@ -88,10 +89,10 @@ public class ClientThread
 					  //If there's no problem
 					  }else if(receiver!=null && receiver.clientSocket != null){
 						  receiver.socOut.println(reformatMsg(message,username));
-						  LogManager.writeOnUserLog(receiver.getUsername(), reformatMsg(message,username));
+						  LogManager.writeOnUserLog(receiver.getUsername(), reformatMsgLog(message,username));
 						  receiver.setLastMessageUsername(username);
 						  socOut.println(reformatMsg(message,"You to "+receiver.getUsername()));
-						  LogManager.writeOnUserLog(username,reformatMsg(message,"You to "+receiver.getUsername()));
+						  LogManager.writeOnUserLog(username,reformatMsgLog(message,"You to "+receiver.getUsername()));
 
 					  //If the username isn't online
 					  }else{
@@ -113,11 +114,15 @@ public class ClientThread
 						  socOut.println(allGroup);
 					  }
 
-					  //check who is the owner of a group
+					  //check the members of a group
 					  else if(line.startsWith("/group members ")){
 						  String groupName = line.split(" ")[2];
-						  socOut.println(LogManager.getGroupMembers(groupName,username));
-
+						  String msg=LogManager.getGroupMembers(groupName,username);
+						  if(msg == null){
+							  socOut.println("The group name does not exist or you do not belong to this group");
+						  }else{
+							  socOut.println(msg);
+						  }
 					  }
 
 					  //create a new group : /group create GroupA
@@ -163,6 +168,7 @@ public class ClientThread
 							  }
 						  }
 
+					  //remove member from a group : /group remove GroupeA Bob
 					  }else if(line.startsWith("/group remove ")){
 
 						  String groupName = line.split(" ")[2];
@@ -196,7 +202,26 @@ public class ClientThread
 						  }
 
 
+					  }else if(line.startsWith("/group leave ")){
+						  String groupName = line.split(" ")[2];
+						  if (!LogManager.groupExist(groupName)) {
+							  socOut.println("Group name doesn't exist");
+						  } else {
+
+							  if(LogManager.leaveGroup(groupName,username)){
+								  socOut.println("You just left the group ["+groupName+"]");
+							  }else{
+								  socOut.println("Error: You can't leave a group if you're the owner or if you don't belong to the group");
+							  }
+						  }
 					  }
+
+					  /*else if(line.startsWith("/group connect")){
+						  String groupName = line.split(" ")[2];
+						  connectingToGroup = true;
+
+
+					  }*/
 				  }
 
 
@@ -221,6 +246,13 @@ public class ClientThread
 		int minute = now.getMinute();
 		return (ANSI_BLUE+" ["+hour+":"+minute+"] "+ username + ANSI_RESET + " : "+line);
   	}
+
+	public String reformatMsgLog(String line, String username){
+		LocalDateTime now = LocalDateTime.now();
+		int hour = now.getHour();
+		int minute = now.getMinute();
+		return (ANSI_GREEN+" ["+hour+":"+minute+"] "+ username + ANSI_RESET + " : "+line);
+	}
 
 
 	public String getUsername() {
