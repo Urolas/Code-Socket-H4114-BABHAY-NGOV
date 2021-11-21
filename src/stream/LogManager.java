@@ -409,6 +409,19 @@ public class LogManager {
         return success;
     }
 
+    //write a new line on the GroupLog txt file
+    public static void writeOnGroupLog(String groupName, String message){
+
+        try (FileWriter fw = new FileWriter("logFiles/GroupLog_"+groupName+".txt",true)) {
+            fw.write(message+"\n"); //appends the new username to the file
+            fw.close();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println(e);
+        }
+    }
 
 
 

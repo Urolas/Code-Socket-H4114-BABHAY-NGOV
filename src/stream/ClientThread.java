@@ -9,6 +9,8 @@ package stream;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -36,6 +38,8 @@ public class ClientThread
 	private ClientThread lastContact=null;
 	private String lastMessageUsername;
 	private boolean connectingToGroup = false;
+	private String connectedGroup = null;
+	private List<ClientThread> groupMembers = new ArrayList<>();
 
 	//Constructor
 	ClientThread(Socket s) {
@@ -65,6 +69,20 @@ public class ClientThread
 						  String username = c.getUsername();
 						  socOut.println(username + " " + clientSocket.getInetAddress());
 					  }
+				  }
+
+				  //if connected to group
+				  if(connectingToGroup && !line.equals("/group disconnect")){
+
+					  //Send msg to yourself and log
+					  socOut.println(reformatMsgGroup(line,"You"));
+					  LogManager.writeOnGroupLog(connectedGroup, reformatMsgGroup(line,username));
+
+					  //send message to anybody connected
+					  for (ClientThread member : groupMembers){
+						  member.socOut.println(reformatMsgGroup(line,username));
+					  }
+
 				  }
 
 				  //send a private message to someone
@@ -201,7 +219,7 @@ public class ClientThread
 							  }
 						  }
 
-
+					  //leave a group : /group leave GroupA
 					  }else if(line.startsWith("/group leave ")){
 						  String groupName = line.split(" ")[2];
 						  if (!LogManager.groupExist(groupName)) {
@@ -216,12 +234,61 @@ public class ClientThread
 						  }
 					  }
 
-					  /*else if(line.startsWith("/group connect")){
+					  //leave a group : /group connect GroupA
+					  else if(line.startsWith("/group connect")){
+
+						  if(connectingToGroup){
+							  socOut.println("Disconnected from group ["+connectedGroup+"]");
+
+							  //send message to anybody connected
+							  for (ClientThread member : groupMembers){
+								  member.socOut.println(username+" just disconnected from the groupChat");
+							  }
+						  }
+
 						  String groupName = line.split(" ")[2];
+						  boolean succeed = true;
+
+						  if (!LogManager.groupExist(groupName)) {
+							  socOut.println("Group name doesn't exist");
+						  }else{
+							  connectedGroup = groupName;
+							  String[] members = LogManager.getGroupMembers(groupName, username).split(", ");
+							  members[0] = members[0].substring(0,members[0].length()-7);
+							  if(!Arrays.asList(members).contains(username)){
+								  socOut.println("You don't belong to this group");
+								  succeed = false;
+							  }
+
+							  if(succeed){
+								  for (String name : members){
+									  ClientThread thread = EchoServerMultiThreaded.getUserByUsername(name);
+									  if(thread!=null && thread!=this){
+										  groupMembers.add(thread);
+									  }
+								  }
+							  }
+						  }
+						  socOut.println("Connected to group ["+groupName+"]");
+						  for (ClientThread member : groupMembers){
+							  member.socOut.println(username+" has joined from the groupChat");
+						  }
+
 						  connectingToGroup = true;
+					  }
 
+					  //disconnect from current group : /group disconnect
+					  else if(line.startsWith("/group disconnect") && connectingToGroup){
+						  socOut.println("Disconnected from group ["+connectedGroup+"]");
 
-					  }*/
+						  //send message to anybody connected
+						  for (ClientThread member : groupMembers){
+							  member.socOut.println(username+" just disconnected from the groupChat");
+						  }
+
+						  connectingToGroup = false;
+					  }
+
 				  }
 
 
@@ -246,6 +313,13 @@ public class ClientThread
 		int minute = now.getMinute();
 		return (ANSI_BLUE+" ["+hour+":"+minute+"] "+ username + ANSI_RESET + " : "+line);
   	}
+
+	public String reformatMsgGroup(String line, String username){
+		LocalDateTime now = LocalDateTime.now();
+		int hour = now.getHour();
+		int minute = now.getMinute();
+		return ("["+connectedGroup+"]"+ANSI_YELLOW+" ["+hour+":"+minute+"] "+ username + ANSI_RESET + " : "+line);
+	}
 
 	public String reformatMsgLog(String line, String username){
 		LocalDateTime now = LocalDateTime.now();
