@@ -198,6 +198,12 @@ public class LogManager {
                 String trimmedLine = currentLine.trim();
                 if(trimmedLine.split(" ")[0].equals(groupName)) {
                     initialPeople = trimmedLine.substring(trimmedLine.indexOf(groupName) + groupName.length() + 1).split(" ");
+                    for (String name : people){ //if the person to be added is already on the List
+                        if(belongToGroup(groupName,name,trimmedLine)){
+                            tempFile.delete();
+                            return false;
+                        }
+                    }
                     continue;
                 }
                 writer.write(currentLine + System.getProperty("line.separator"));
@@ -310,8 +316,10 @@ public class LogManager {
                     initialPeople = trimmedLine.substring(trimmedLine.indexOf(groupName) + groupName.length() + 1).split(" ");
                     for (String name : people){ //if the person to be removed isn't in the member list
                         if(!belongToGroup(groupName,name,trimmedLine)){
+                            tempFile.delete();
                             return false;
                         }else if(isGroupOwner(groupName,name)){
+                            tempFile.delete();
                             return false;
                         }
                     }
@@ -324,12 +332,11 @@ public class LogManager {
             //Write a new line with the update
             String newName ="";
             for (String name : initialPeople){
-                if(Arrays.asList(people).contains(name)){
-                    newName+="name ";
+                if(!Arrays.asList(people).contains(name)){
+                    newName+=name+" ";
                 }
             }
             writer.write(groupName+" "+newName+System.getProperty("line.separator"));
-
 
             writer.close();
             reader.close();

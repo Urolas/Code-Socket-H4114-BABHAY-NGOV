@@ -140,7 +140,7 @@ public class ClientThread
 							  socOut.println("Group name doesn't exist");
 						  } else {
 							  if (!LogManager.isGroupOwner(groupName, username)) {
-								  socOut.println("You don't have the permission to add people to this group");
+								  socOut.println("Error: You don't have the permission to add people to this group");
 
 							  } else {
 								  String[] addedPeople = line.substring(line.indexOf(groupName) + groupName.length() + 1).split(" ");
@@ -148,7 +148,7 @@ public class ClientThread
 								  //Check if every username exist
 								  for (String name : addedPeople) {
 									  if (!LogManager.userExist(name)) {
-										  socOut.println("User doesn't exist");
+										  socOut.println("Error: User doesn't exist");
 										  succeed = false;
 										  break;
 									  }
@@ -156,6 +156,8 @@ public class ClientThread
 
 								  if (succeed && LogManager.addPeopleToGroup(groupName, addedPeople)) {
 									  socOut.println(Stream.of(addedPeople).collect(Collectors.joining(",")) + " added to group [" + groupName + "]");
+								  }else{
+									  socOut.println("Error: You can't add people who are already on the group");
 								  }
 
 							  }
@@ -167,10 +169,10 @@ public class ClientThread
 						  boolean succeed=true;
 
 						  if (!LogManager.groupExist(groupName)) {
-							  socOut.println("Group name doesn't exist");
+							  socOut.println("Error: Group name doesn't exist");
 						  } else {
 							  if (!LogManager.isGroupOwner(groupName, username)) {
-								  socOut.println("You don't have the permission to remove people from this group");
+								  socOut.println("Error: You don't have the permission to remove people from this group");
 
 							  } else {
 								  String[] removedPeople = line.substring(line.indexOf(groupName) + groupName.length() + 1).split(" ");
