@@ -231,7 +231,7 @@ public class LogManager {
 
     }
 
-    public static String getUserGroups(String username){
+    public static String[] getUserGroups(String username){
         String group="";
 
         try(FileReader fileReader = new FileReader("logFiles/allGroups.txt")) {
@@ -243,7 +243,7 @@ public class LogManager {
                 String groupName = splitLine[0];
                 String[] people = line.substring(line.indexOf(groupName) + groupName.length() + 1).split(" ");
                 if(Arrays.asList(people).contains(username)){
-                    group+= "- "+groupName + "("+people.length +")\n";
+                    group+= groupName + " "+people.length +" ";
                 }
 
 
@@ -254,40 +254,8 @@ public class LogManager {
             System.err.println(e);
         }
 
-        return group;
+        return group.split(" ");
     }
-
-    public static String getUserGroupsDetail(String username){
-
-        String group ="";
-
-        try(FileReader fileReader = new FileReader("logFiles/allGroups.txt")) {
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-
-                String[] splitLine = line.split(" ");
-                String groupName = splitLine[0];
-                String[] people = line.substring(line.indexOf(groupName) + groupName.length() + 1).split(" ");
-                if(Arrays.asList(people).contains(username)){
-                    group+="--------------\n";
-                    group+= "["+groupName +"]\n";
-                    group+= people.length + "Members\n";
-                    group+="\n";
-                }
-
-            }
-        } catch (FileNotFoundException e) {
-            System.err.println(e);
-        } catch (IOException e) {
-            System.err.println(e);
-        }
-
-        return group;
-
-
-    }
-
 
 
     public static String getGroupMembers(String groupName, String username){

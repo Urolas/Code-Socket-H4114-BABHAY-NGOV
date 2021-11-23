@@ -90,10 +90,6 @@ public class ClientThread
 						  typeGroup();
 					  }
 
-					  else if(line.startsWith("/group all")){
-						  typeGroupAll();
-					  }
-
 					  //check the members of a group
 					  else if(line.startsWith("/group members ")){
 						  typeGroupMembers();
@@ -255,21 +251,28 @@ public class ClientThread
 	}
 
 	public void typeGroup(){
-		String allGroup = LogManager.getUserGroups(username);
-		socOut.println(allGroup);
-	}
-
-	public void typeGroupAll(){
-
+		String[] allGroup = LogManager.getUserGroups(username);
+		for (int i=0; i<allGroup.length; i=i+2){
+			String groupName = allGroup[i];
+			socOut.println("-------------------------");
+			socOut.println("["+groupName+"]");
+			socOut.println(allGroup[i+1]+ " Members");
+			socOut.println(connectedUsersInGroup(groupName,username).size()+ " Connected");
+		}
 	}
 
 	public void typeGroupMembers(){
 		String groupName = line.split(" ")[2];
 		String msg=LogManager.getGroupMembers(groupName,username);
+		List<String> connected = connectedUsersInGroup(groupName, username);
+		String connectedMembers = connected.stream()
+				.map(n -> String.valueOf(n))
+				.collect(Collectors.joining(", "));
 		if(msg == null){
 			socOut.println("The group name does not exist or you do not belong to this group");
 		}else{
-			socOut.println(msg);
+			socOut.println("Members : "+msg);
+			socOut.println("Currently in group chat : "+connectedMembers);
 		}
 	}
 
@@ -451,8 +454,7 @@ public class ClientThread
 		socOut.println("/msg <receiverUsername> <message>                    : send a private message to a user");
 		socOut.println("/r <message>                                         : send a private message to the last user who sent you a message");
 		socOut.println("/history                                             : show your log's history");
-		socOut.println("/group                                               : show the name of all groups you belong to");
-		socOut.println("/group all                                           : show more detail of all groups you belong to");
+		socOut.println("/group                                               : show details of all groups you belong to");
 		socOut.println("/group members <groupName>                           : show the name of the members of a group and see who's the group owner");
 		socOut.println("/group create <groupName>                            : create a new group");
 		socOut.println("/group delete <groupName>                            : delete a group if you're the group owner");
@@ -464,6 +466,23 @@ public class ClientThread
 		socOut.println("/quit                                                : quit the chat application");
 
 	}
+
+	public List<String> connectedUsersInGroup(String groupName,String username){
+
+		List<String> users = new ArrayList<>();
+		String[] members = LogManager.getGroupMembers(groupName, username).split(", ");
+		members[0] = members[0].substring(0,members[0].length()-7);
+
+		for (String name : members){
+			ClientThread thread = EchoServerMultiThreaded.getUserByUsername(name);
+			if(thread!=null && thread.connectingToGroup && thread.connectedGroup.equals(groupName)){
+				users.add(thread.username);
+			}
+		}
+		return users;
+	}
+
+
 
 }
 
