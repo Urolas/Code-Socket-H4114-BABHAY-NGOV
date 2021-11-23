@@ -33,6 +33,7 @@ public class ClientThread
 	private Socket clientSocket; //socket
 	private BufferedReader socIn; //reader flow
 	private PrintStream socOut; //writer flow
+	private String line;
 
 	private String username; //the client's username (because can't be stock in socket)
 	private ClientThread lastContact=null;
@@ -58,245 +59,80 @@ public class ClientThread
 			  username = socIn.readLine().trim(); //get the first line of the flow: the client's username
 
 			  while (true) {
-				  String line = socIn.readLine();
+				  line = socIn.readLine();
 				  System.out.println(reformatMsg(line,username)); //print the message on EchoServer
 
 				  // /show online command to show everybody connected on the server
 				  if(line.equals("/online")){
-					  socOut.println("Users online: ");
-					  List<ClientThread> listClients =  EchoServerMultiThreaded.getClientThreadList();
-					  for (ClientThread c : listClients){
-						  String username = c.getUsername();
-						  socOut.println(username + " " + clientSocket.getInetAddress());
-					  }
+					  typeOnline();
 				  }
 
 				  //if connected to group
 				  if(connectingToGroup && !line.equals("/group disconnect")){
-
-					  //Send msg to yourself and log
-					  socOut.println(reformatMsgGroup(line,"You"));
-					  LogManager.writeOnGroupLog(connectedGroup, reformatMsgGroup(line,username));
-
-					  //send message to anybody connected
-					  for (ClientThread member : groupMembers){
-						  member.socOut.println(reformatMsgGroup(line,username));
-					  }
-
+					  typeMsgInGroup();
 				  }
 
 				  //send a private message to someone
 				  if(line.startsWith("/msg ") || line.startsWith("/r ")){
-					  String name = "";
-					  String message = "";
-					  if (line.startsWith("/msg ")){
-						  name = line.split(" ")[1];
-						  message = line.substring(line.indexOf(name) + name.length() + 1);
-					  }else if (line.startsWith("/r ")){
-						  name = lastMessageUsername;
-						  message = line.substring(3);
-					  }
-
-					  ClientThread receiver = EchoServerMultiThreaded.getUserByUsername(name);
-					  System.out.println(username+ " to "+ name+ " : \""+message+"\"");
-
-					  //If they send a message to their own username
-					  if(receiver!=null && receiver.clientSocket==clientSocket) {
-						  socOut.println("You can't send a message to yourself!");
-
-					  //If there's no problem
-					  }else if(receiver!=null && receiver.clientSocket != null){
-						  receiver.socOut.println(reformatMsg(message,username));
-						  LogManager.writeOnUserLog(receiver.getUsername(), reformatMsgLog(message,username));
-						  receiver.setLastMessageUsername(username);
-						  socOut.println(reformatMsg(message,"You to "+receiver.getUsername()));
-						  LogManager.writeOnUserLog(username,reformatMsgLog(message,"You to "+receiver.getUsername()));
-
-					  //If the username isn't online
-					  }else{
-						  socOut.println("This username doesn't exist or isn't online");
-					  }
+					  typeMsg();
 				  }
 
 				  //show log of the user
 				  if(line.equals("/history")){
-					  String history = LogManager.getHistory(username);
-					  socOut.println(history);
+					  typeHistory();
 				  }
 
 				  if(line.startsWith("/group")){
 
 					  //check all group the user is in
 					  if(line.trim().equals("/group")){
-						  String allGroup = LogManager.getUserGroups(username);
-						  socOut.println(allGroup);
+						  typeGroup();
 					  }
 
 					  //check the members of a group
 					  else if(line.startsWith("/group members ")){
-						  String groupName = line.split(" ")[2];
-						  String msg=LogManager.getGroupMembers(groupName,username);
-						  if(msg == null){
-							  socOut.println("The group name does not exist or you do not belong to this group");
-						  }else{
-							  socOut.println(msg);
-						  }
+						  typeGroupMembers();
 					  }
 
 					  //create a new group : /group create GroupA
 					  else if(line.startsWith("/group create ")){
-						  String groupName = line.split(" ")[2];
-						  if(LogManager.findGroupInFile(groupName,username)){
-							  socOut.println("Group ["+groupName+"] created");
-						  }else{
-							  socOut.println("Group name already exist");
-						  }
+						  typeGroupCreate();
 					  }
 
 					  //add member to a group : /group add GroupA Sara Eric Louis
 					  else if(line.startsWith("/group add ")) {
+						  typeGroupAddMember();
 
-						  boolean succeed = true;
-						  String groupName = line.split(" ")[2];
-						  //Check if group exist
-						  if (!LogManager.groupExist(groupName)) {
-							  socOut.println("Group name doesn't exist");
-						  } else {
-							  if (!LogManager.isGroupOwner(groupName, username)) {
-								  socOut.println("Error: You don't have the permission to add people to this group");
-
-							  } else {
-								  String[] addedPeople = line.substring(line.indexOf(groupName) + groupName.length() + 1).split(" ");
-
-								  //Check if every username exist
-								  for (String name : addedPeople) {
-									  if (!LogManager.userExist(name)) {
-										  socOut.println("Error: User doesn't exist");
-										  succeed = false;
-										  break;
-									  }
-								  }
-
-								  if (succeed && LogManager.addPeopleToGroup(groupName, addedPeople)) {
-									  socOut.println(Stream.of(addedPeople).collect(Collectors.joining(",")) + " added to group [" + groupName + "]");
-								  }else{
-									  socOut.println("Error: You can't add people who are already on the group");
-								  }
-
-							  }
-						  }
 
 					  //remove member from a group : /group remove GroupeA Bob
-					  }else if(line.startsWith("/group remove ")){
+					  }else if(line.startsWith("/group remove ")) {
+						  typeGroupRemoveMember();
 
-						  String groupName = line.split(" ")[2];
-						  boolean succeed=true;
-
-						  if (!LogManager.groupExist(groupName)) {
-							  socOut.println("Error: Group name doesn't exist");
-						  } else {
-							  if (!LogManager.isGroupOwner(groupName, username)) {
-								  socOut.println("Error: You don't have the permission to remove people from this group");
-
-							  } else {
-								  String[] removedPeople = line.substring(line.indexOf(groupName) + groupName.length() + 1).split(" ");
-
-								  //Check if every username exist
-								  for (String name : removedPeople) {
-									  if (!LogManager.userExist(name)) {
-										  socOut.println("User doesn't exist");
-										  succeed = false;
-										  break;
-									  }
-								  }
-
-								  if (succeed && LogManager.removePeopleFromGroup(groupName, removedPeople)) {
-									  socOut.println(Stream.of(removedPeople).collect(Collectors.joining(",")) + " removed from group [" + groupName + "]");
-								  }else{
-									  socOut.println("Error: You can't remove a person who doesn't belong to the group or yourself");
-								  }
-
-							  }
-						  }
+					  }else if(line.startsWith("/group delete ")){
+						  typeGroupDelete();
 
 					  //leave a group : /group leave GroupA
 					  }else if(line.startsWith("/group leave ")){
-						  String groupName = line.split(" ")[2];
-						  if (!LogManager.groupExist(groupName)) {
-							  socOut.println("Group name doesn't exist");
-						  } else {
-
-							  if(LogManager.leaveGroup(groupName,username)){
-								  socOut.println("You just left the group ["+groupName+"]");
-							  }else{
-								  socOut.println("Error: You can't leave a group if you're the owner or if you don't belong to the group");
-							  }
-						  }
+						  typeGroupLeave();
 					  }
 
 					  //leave a group : /group connect GroupA
-					  else if(line.startsWith("/group connect")){
+					  else if(line.startsWith("/group enter")){
+						   typeGroupConnect();
 
-						  if(connectingToGroup){
-							  socOut.println("Disconnected from group ["+connectedGroup+"]");
-
-							  //send message to anybody connected
-							  for (ClientThread member : groupMembers){
-								  member.socOut.println(username+" just disconnected from the groupChat");
-							  }
-						  }
-
-						  String groupName = line.split(" ")[2];
-						  boolean succeed = true;
-
-						  if (!LogManager.groupExist(groupName)) {
-							  socOut.println("Group name doesn't exist");
-						  }else{
-							  connectedGroup = groupName;
-							  String[] members = LogManager.getGroupMembers(groupName, username).split(", ");
-							  members[0] = members[0].substring(0,members[0].length()-7);
-							  if(!Arrays.asList(members).contains(username)){
-								  socOut.println("You don't belong to this group");
-								  succeed = false;
-							  }
-
-							  if(succeed){
-								  for (String name : members){
-									  ClientThread thread = EchoServerMultiThreaded.getUserByUsername(name);
-									  if(thread!=null && thread!=this){
-										  groupMembers.add(thread);
-									  }
-								  }
-							  }
-						  }
-						  socOut.println("Connected to group ["+groupName+"]");
-						  for (ClientThread member : groupMembers){
-							  member.socOut.println(username+" has joined from the groupChat");
-						  }
-
-						  connectingToGroup = true;
 					  }
 
 					  //disconnect from current group : /group disconnect
 					  else if(line.startsWith("/group disconnect") && connectingToGroup){
-						  socOut.println("Disconnected from group ["+connectedGroup+"]");
-
-						  //send message to anybody connected
-						  for (ClientThread member : groupMembers){
-							  member.socOut.println(username+" just disconnected from the groupChat");
-						  }
-
-						  connectingToGroup = false;
+						  typeGroupDisconnect();
 					  }
 
 				  }
-
-
+				  
 
 				  //leave the chat
 				  if(line.equals("/quit")){
-					  EchoServerMultiThreaded.removeClientFromThreadList(this);
-					  return;
+					  typeQuit();
 				  }
 
 
@@ -336,6 +172,284 @@ public class ClientThread
 	public void setLastMessageUsername(String lastMessageUsername) {
 		this.lastMessageUsername = lastMessageUsername;
 	}
+
+	public void typeOnline(){
+
+		socOut.println("Users online: ");
+		List<ClientThread> listClients =  EchoServerMultiThreaded.getClientThreadList();
+		for (ClientThread c : listClients){
+			String username = c.getUsername();
+			socOut.println(username + " " + clientSocket.getInetAddress());
+		}
+	}
+
+	public void typeMsgInGroup(){
+
+		//Send msg to yourself and log
+		socOut.println(reformatMsgGroup(line,"You"));
+		LogManager.writeOnGroupLog(connectedGroup, reformatMsgGroup(line,username));
+
+		//send message to anybody connected
+		for (ClientThread member : groupMembers){
+			member.socOut.println(reformatMsgGroup(line,username));
+		}
+
+	}
+
+	public void typeMsg(){
+
+		String name = "";
+		String message = "";
+		if (line.startsWith("/msg ")){
+			name = line.split(" ")[1];
+			message = line.substring(line.indexOf(name) + name.length() + 1);
+		}else if (line.startsWith("/r ")){
+			name = lastMessageUsername;
+			message = line.substring(3);
+		}
+
+		ClientThread receiver = EchoServerMultiThreaded.getUserByUsername(name);
+		System.out.println(username+ " to "+ name+ " : \""+message+"\"");
+
+		//If they send a message to their own username
+		if(receiver!=null && receiver.clientSocket==clientSocket) {
+			socOut.println("You can't send a message to yourself!");
+
+			//If there's no problem
+		}else if(receiver!=null && receiver.clientSocket != null){
+			receiver.socOut.println(reformatMsg(message,username));
+			LogManager.writeOnUserLog(receiver.getUsername(), reformatMsgLog(message,username));
+			receiver.setLastMessageUsername(username);
+			socOut.println(reformatMsg(message,"You to "+receiver.getUsername()));
+			LogManager.writeOnUserLog(username,reformatMsgLog(message,"You to "+receiver.getUsername()));
+
+			//If the username isn't online
+		}else{
+			socOut.println("This username doesn't exist or isn't online");
+		}
+	}
+
+	public void typeHistory(){
+		String history = LogManager.getHistory(username);
+		socOut.println(history);
+	}
+
+	public void typeGroup(){
+		String allGroup = LogManager.getUserGroups(username);
+		socOut.println(allGroup);
+	}
+
+	public void typeGroupMembers(){
+		String groupName = line.split(" ")[2];
+		String msg=LogManager.getGroupMembers(groupName,username);
+		if(msg == null){
+			socOut.println("The group name does not exist or you do not belong to this group");
+		}else{
+			socOut.println(msg);
+		}
+	}
+
+	public void typeGroupCreate(){
+		String groupName = line.split(" ")[2];
+		if(LogManager.findGroupInFile(groupName,username)){
+			socOut.println("Group ["+groupName+"] created");
+		}else{
+			socOut.println("Group name already exist");
+		}
+	}
+
+	public void typeGroupAddMember(){
+		boolean succeed = true;
+		String groupName = line.split(" ")[2];
+		//Check if group exist
+		if (!LogManager.groupExist(groupName)) {
+			socOut.println("Group name doesn't exist");
+		} else {
+			if (!LogManager.isGroupOwner(groupName, username)) {
+				socOut.println("Error: You don't have the permission to add people to this group");
+
+			} else {
+				String[] addedPeople = line.substring(line.indexOf(groupName) + groupName.length() + 1).split(" ");
+
+				//Check if every username exist
+				for (String name : addedPeople) {
+					if (!LogManager.userExist(name)) {
+						socOut.println("Error: User doesn't exist");
+						succeed = false;
+						break;
+					}
+				}
+
+				if (succeed && LogManager.addPeopleToGroup(groupName, addedPeople)) {
+					socOut.println(Stream.of(addedPeople).collect(Collectors.joining(",")) + " added to group [" + groupName + "]");
+				}else{
+					socOut.println("Error: You can't add people who are already on the group");
+				}
+
+			}
+		}
+	}
+
+	public void typeGroupRemoveMember(){
+		String groupName = line.split(" ")[2];
+		boolean succeed=true;
+
+		if (!LogManager.groupExist(groupName)) {
+			socOut.println("Error: Group name doesn't exist");
+		} else {
+			if (!LogManager.isGroupOwner(groupName, username)) {
+				socOut.println("Error: You don't have the permission to remove people from this group");
+
+			} else {
+				String[] removedPeople = line.substring(line.indexOf(groupName) + groupName.length() + 1).split(" ");
+				System.out.println("wanna remove"+removedPeople[0]+" from"+groupName);
+
+				//Check if every username exist
+				for (String name : removedPeople) {
+					if (!LogManager.userExist(name)) {
+						socOut.println("User doesn't exist");
+						succeed = false;
+						break;
+					}
+				}
+
+				if (succeed && LogManager.removePeopleFromGroup(groupName, removedPeople)) {
+					socOut.println(Stream.of(removedPeople).collect(Collectors.joining(",")) + " removed from group [" + groupName + "]");
+				}else{
+					socOut.println("Error: You can't remove a person who doesn't belong to the group or yourself");
+				}
+
+			}
+		}
+	}
+
+	public void typeGroupLeave(){
+		String groupName = line.split(" ")[2];
+		if (!LogManager.groupExist(groupName)) {
+			socOut.println("Group name doesn't exist");
+		} else {
+
+			if(LogManager.leaveGroup(groupName,username)){
+				socOut.println("You just left the group ["+groupName+"]");
+			}else{
+				socOut.println("Error: You can't leave a group if you're the owner or if you don't belong to the group");
+			}
+		}
+	}
+
+	public void typeGroupConnect(){
+		if(connectingToGroup){
+			socOut.println("Disconnected from group ["+connectedGroup+"]");
+
+			//send message to anybody connected
+			for (ClientThread member : groupMembers){
+				member.socOut.println(username+" just disconnected from the groupChat");
+			}
+		}
+
+		String groupName = line.split(" ")[2];
+		boolean succeed = true;
+
+		if (!LogManager.groupExist(groupName)) {
+			socOut.println("Group name doesn't exist");
+		}else{
+			connectedGroup = groupName;
+			String[] members = LogManager.getGroupMembers(groupName, username).split(", ");
+			members[0] = members[0].substring(0,members[0].length()-7);
+			if(!Arrays.asList(members).contains(username)){
+				socOut.println("You don't belong to this group");
+				succeed = false;
+			}
+
+			if(succeed){
+				for (String name : members){
+					ClientThread thread = EchoServerMultiThreaded.getUserByUsername(name);
+					if(thread!=null && thread!=this && thread.connectingToGroup && thread.connectedGroup.equals(groupName)){
+						groupMembers.add(thread);
+					}
+				}
+			}
+		}
+		socOut.println("Connected to group ["+groupName+"]");
+		for (ClientThread member : groupMembers){
+			member.socOut.println(username+" has joined from the groupChat");
+		}
+
+		connectingToGroup = true;
+	}
+
+	public void typeGroupDisconnect(){
+		if(connectingToGroup){
+			socOut.println("Disconnected from group ["+connectedGroup+"]");
+
+			//send message to anybody connected
+			for (ClientThread member : groupMembers){
+				member.socOut.println(username+" just disconnected from the groupChat");
+			}
+		}
+
+		String groupName = line.split(" ")[2];
+		boolean succeed = true;
+
+		if (!LogManager.groupExist(groupName)) {
+			socOut.println("Group name doesn't exist");
+		}else{
+			connectedGroup = groupName;
+			String[] members = LogManager.getGroupMembers(groupName, username).split(", ");
+			members[0] = members[0].substring(0,members[0].length()-7);
+			if(!Arrays.asList(members).contains(username)){
+				socOut.println("You don't belong to this group");
+				succeed = false;
+			}
+
+			if(succeed){
+				for (String name : members){
+					ClientThread thread = EchoServerMultiThreaded.getUserByUsername(name);
+					if(thread!=null && thread!=this){
+						groupMembers.add(thread);
+					}
+				}
+			}
+		}
+		socOut.println("Connected to group ["+groupName+"]");
+		for (ClientThread member : groupMembers){
+			member.socOut.println(username+" has joined from the groupChat");
+		}
+
+		connectingToGroup = true;
+	}
+
+	public void typeQuit(){
+		EchoServerMultiThreaded.removeClientFromThreadList(this);
+		return;
+	}
+
+	public void typeGroupDelete(){
+
+		String groupName = line.split(" ")[2];
+		boolean succeed=true;
+
+		if (!LogManager.groupExist(groupName)) {
+			socOut.println("Error: Group name doesn't exist");
+		} else {
+			if (!LogManager.isGroupOwner(groupName, username)) {
+				socOut.println("Error: You don't have the permission to delete this group");
+
+			} else {
+
+
+				if (succeed && LogManager.deleteGroup(groupName)) {
+					socOut.println("Group ["+groupName+ "] deleted");
+				}else{
+					socOut.println("Error: An error occurs while deleting a group");
+				}
+
+			}
+		}
+
+
+	}
+
 }
 
   

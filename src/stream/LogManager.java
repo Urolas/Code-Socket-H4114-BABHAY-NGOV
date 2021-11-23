@@ -423,6 +423,48 @@ public class LogManager {
         }
     }
 
+    public static boolean deleteGroup(String groupName){
+        boolean success=true;
+        File GroupLog = new File("logFiles/GroupLog_"+groupName+".txt");
+
+        try{
+            File inputFile = new File("logFiles/allGroups.txt");
+            File tempFile = new File("logFiles/myTempFile.txt");
+
+            BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+
+            String currentLine;
+
+
+            //Remove the old line
+            while((currentLine = reader.readLine()) != null) {
+                String trimmedLine = currentLine.trim();
+                if(trimmedLine.split(" ")[0].equals(groupName)) {
+                    continue;
+                }
+                writer.write(currentLine + System.getProperty("line.separator"));
+            }
+
+
+            writer.close();
+            reader.close();
+            inputFile.delete();
+            success = tempFile.renameTo(inputFile);
+
+            if (!GroupLog.delete()) {
+                success = false;
+            }
+
+        } catch (FileNotFoundException e) {
+            System.err.println(e);
+        } catch (IOException e) {
+            System.err.println(e);
+        }
+
+        return success;
+    }
+
 
 
 }
