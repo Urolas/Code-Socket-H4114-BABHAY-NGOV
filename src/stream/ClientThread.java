@@ -59,6 +59,7 @@ public class ClientThread
 			  username = socIn.readLine().trim(); //get the first line of the flow: the client's username
 
 			  while (true) {
+
 				  line = socIn.readLine();
 				  System.out.println(reformatMsg(line,username)); //print the message on EchoServer
 
@@ -68,25 +69,29 @@ public class ClientThread
 				  }
 
 				  //if connected to group
-				  if(connectingToGroup && !line.equals("/group disconnect")){
+				  else if(connectingToGroup && !line.equals("/group disconnect") && !line.equals("/help")){
 					  typeMsgInGroup();
 				  }
 
 				  //send a private message to someone
-				  if(line.startsWith("/msg ") || line.startsWith("/r ")){
+				  else if(line.startsWith("/msg ") || line.startsWith("/r ")){
 					  typeMsg();
 				  }
 
 				  //show log of the user
-				  if(line.equals("/history")){
+				  else if(line.equals("/history")){
 					  typeHistory();
 				  }
 
-				  if(line.startsWith("/group")){
+				  else if(line.startsWith("/group")){
 
 					  //check all group the user is in
 					  if(line.trim().equals("/group")){
 						  typeGroup();
+					  }
+
+					  else if(line.startsWith("/group all")){
+						  typeGroupAll();
 					  }
 
 					  //check the members of a group
@@ -128,13 +133,19 @@ public class ClientThread
 					  }
 
 				  }
-				  
+
+				  else if(line.equals("/help")){
+					  typeHelp();
+				  }
 
 				  //leave the chat
-				  if(line.equals("/quit")){
+				  else if(line.equals("/quit")){
 					  typeQuit();
 				  }
 
+				  else{
+					  socOut.println("Your command doesn't make sense. Check /help for more details");
+				  }
 
 
 			  }
@@ -185,6 +196,14 @@ public class ClientThread
 
 	public void typeMsgInGroup(){
 
+		if(line.startsWith("/msg ")||line.startsWith("/r ")){
+			typeMsg();
+		}else if(line.equals("/help")){
+			typeHelp();
+		}else if(line.startsWith("/")){
+			socOut.println("Warning: you can't type commands other than /msg, /r, /group disconnect and /help inside a group chat");
+		}
+
 		//Send msg to yourself and log
 		socOut.println(reformatMsgGroup(line,"You"));
 		LogManager.writeOnGroupLog(connectedGroup, reformatMsgGroup(line,username));
@@ -193,6 +212,7 @@ public class ClientThread
 		for (ClientThread member : groupMembers){
 			member.socOut.println(reformatMsgGroup(line,username));
 		}
+
 
 	}
 
@@ -237,6 +257,10 @@ public class ClientThread
 	public void typeGroup(){
 		String allGroup = LogManager.getUserGroups(username);
 		socOut.println(allGroup);
+	}
+
+	public void typeGroupAll(){
+
 	}
 
 	public void typeGroupMembers(){
@@ -379,44 +403,17 @@ public class ClientThread
 	}
 
 	public void typeGroupDisconnect(){
-		if(connectingToGroup){
-			socOut.println("Disconnected from group ["+connectedGroup+"]");
+		if(connectingToGroup) {
+			socOut.println("Disconnected from group [" + connectedGroup + "]");
 
 			//send message to anybody connected
-			for (ClientThread member : groupMembers){
-				member.socOut.println(username+" just disconnected from the groupChat");
+			for (ClientThread member : groupMembers) {
+				member.socOut.println(username + " just disconnected from the groupChat");
 			}
-		}
-
-		String groupName = line.split(" ")[2];
-		boolean succeed = true;
-
-		if (!LogManager.groupExist(groupName)) {
-			socOut.println("Group name doesn't exist");
+			connectingToGroup = false;
 		}else{
-			connectedGroup = groupName;
-			String[] members = LogManager.getGroupMembers(groupName, username).split(", ");
-			members[0] = members[0].substring(0,members[0].length()-7);
-			if(!Arrays.asList(members).contains(username)){
-				socOut.println("You don't belong to this group");
-				succeed = false;
-			}
-
-			if(succeed){
-				for (String name : members){
-					ClientThread thread = EchoServerMultiThreaded.getUserByUsername(name);
-					if(thread!=null && thread!=this){
-						groupMembers.add(thread);
-					}
-				}
-			}
+			socOut.println("You didn't enter any group in the first place");
 		}
-		socOut.println("Connected to group ["+groupName+"]");
-		for (ClientThread member : groupMembers){
-			member.socOut.println(username+" has joined from the groupChat");
-		}
-
-		connectingToGroup = true;
 	}
 
 	public void typeQuit(){
@@ -446,7 +443,25 @@ public class ClientThread
 
 			}
 		}
+	}
 
+	public void typeHelp(){
+
+		socOut.println("/online                                              : show users who are currently online");
+		socOut.println("/msg <receiverUsername> <message>                    : send a private message to a user");
+		socOut.println("/r <message>                                         : send a private message to the last user who sent you a message");
+		socOut.println("/history                                             : show your log's history");
+		socOut.println("/group                                               : show the name of all groups you belong to");
+		socOut.println("/group all                                           : show more detail of all groups you belong to");
+		socOut.println("/group members <groupName>                           : show the name of the members of a group and see who's the group owner");
+		socOut.println("/group create <groupName>                            : create a new group");
+		socOut.println("/group delete <groupName>                            : delete a group if you're the group owner");
+		socOut.println("/group add <groupName> <username1> <username2> ...   : add members to a group if you're the group owner");
+		socOut.println("/group remove <groupName> <username1> <username2>... : remove members to a group if you're the group owner");
+		socOut.println("/group leave <groupName>                             : leave a group if you're not the group owner");
+		socOut.println("/group enter <groupName>                             : enter a group chat");
+		socOut.println("/group disconnect                                    : disconnect from the current group chat");
+		socOut.println("/quit                                                : quit the chat application");
 
 	}
 

@@ -257,6 +257,39 @@ public class LogManager {
         return group;
     }
 
+    public static String getUserGroupsDetail(String username){
+
+        String group ="";
+
+        try(FileReader fileReader = new FileReader("logFiles/allGroups.txt")) {
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+
+                String[] splitLine = line.split(" ");
+                String groupName = splitLine[0];
+                String[] people = line.substring(line.indexOf(groupName) + groupName.length() + 1).split(" ");
+                if(Arrays.asList(people).contains(username)){
+                    group+="--------------\n";
+                    group+= "["+groupName +"]\n";
+                    group+= people.length + "Members\n";
+                    group+="\n";
+                }
+
+            }
+        } catch (FileNotFoundException e) {
+            System.err.println(e);
+        } catch (IOException e) {
+            System.err.println(e);
+        }
+
+        return group;
+
+
+    }
+
+
+
     public static String getGroupMembers(String groupName, String username){
         String members = "";
 
