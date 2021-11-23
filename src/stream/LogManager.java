@@ -118,6 +118,26 @@ public class LogManager {
         return log;
     }
 
+    //read the group's log file
+    public static String getHistoryGroup(String groupName){
+        String log="";
+
+        try(FileReader fileReader = new FileReader("logFiles/GroupLog_"+groupName+".txt")) {
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                log += line+"\n";
+            }
+        } catch (FileNotFoundException e) {
+            System.err.println(e);
+        } catch (IOException e) {
+            System.err.println(e);
+        }
+
+        return log;
+    }
+
+
     //Find group if it exists, if not, then create
     public static boolean findGroupInFile(String groupName, String creator){
 
@@ -268,7 +288,7 @@ public class LogManager {
             while ((line = bufferedReader.readLine()) != null) {
                 if(line.split(" ")[0].equals(groupName)){
                     String[] memTab = line.substring(line.indexOf(groupName) + groupName.length() + 1).split(" ");
-                    memTab[0] = memTab[0] + "(admin)";
+                    memTab[0] = memTab[0] + "(owner)";
                     if(belongToGroup(groupName, username, line)) {
                         members = Stream.of(memTab).collect(Collectors.joining(", "));
                     }else{

@@ -90,11 +90,6 @@ public class ClientThread
 						  typeGroup();
 					  }
 
-					  //check the members of a group
-					  else if(line.startsWith("/group members ")){
-						  typeGroupMembers();
-					  }
-
 					  //create a new group : /group create GroupA
 					  else if(line.startsWith("/group create ")){
 						  typeGroupCreate();
@@ -118,7 +113,7 @@ public class ClientThread
 					  }
 
 					  //leave a group : /group connect GroupA
-					  else if(line.startsWith("/group enter")){
+					  else if(line.startsWith("/group connect")){
 						   typeGroupConnect();
 
 					  }
@@ -161,7 +156,7 @@ public class ClientThread
 		LocalDateTime now = LocalDateTime.now();
 		int hour = now.getHour();
 		int minute = now.getMinute();
-		return ("["+connectedGroup+"]"+ANSI_YELLOW+" ["+hour+":"+minute+"] "+ username + ANSI_RESET + " : "+line);
+		return (ANSI_PURPLE+"["+connectedGroup+"]"+" ["+hour+":"+minute+"] "+ username + ANSI_RESET + " : "+line);
 	}
 
 	public String reformatMsgLog(String line, String username){
@@ -194,15 +189,17 @@ public class ClientThread
 
 		if(line.startsWith("/msg ")||line.startsWith("/r ")){
 			typeMsg();
-		}else if(line.equals("/help")){
+		}else if(line.equals("/help")) {
 			typeHelp();
+		}else if(line.equals("/history")){
+			typeHistoryGroup();
 		}else if(line.startsWith("/")){
-			socOut.println("Warning: you can't type commands other than /msg, /r, /group disconnect and /help inside a group chat");
+			socOut.println("Warning: you can't type commands other than /msg, /r, /history, /group disconnect and /help inside a group chat");
 		}
 
 		//Send msg to yourself and log
 		socOut.println(reformatMsgGroup(line,"You"));
-		LogManager.writeOnGroupLog(connectedGroup, reformatMsgGroup(line,username));
+		LogManager.writeOnGroupLog(connectedGroup, reformatMsgLog(line,username));
 
 		//send message to anybody connected
 		for (ClientThread member : groupMembers){
@@ -213,6 +210,11 @@ public class ClientThread
 	}
 
 	public void typeMsg(){
+
+		if(line.split(" ").length<3){
+			socOut.println("Your command doesn't make sense. Check /help for more details");
+			return;
+		}
 
 		String name = "";
 		String message = "";
@@ -229,7 +231,7 @@ public class ClientThread
 
 		//If they send a message to their own username
 		if(receiver!=null && receiver.clientSocket==clientSocket) {
-			socOut.println("You can't send a message to yourself!");
+			socOut.println("Error: You can't send a message to yourself!");
 
 			//If there's no problem
 		}else if(receiver!=null && receiver.clientSocket != null){
@@ -241,7 +243,7 @@ public class ClientThread
 
 			//If the username isn't online
 		}else{
-			socOut.println("This username doesn't exist or isn't online");
+			socOut.println("Error: This username doesn't exist or isn't online");
 		}
 	}
 
@@ -250,50 +252,64 @@ public class ClientThread
 		socOut.println(history);
 	}
 
+	public void typeHistoryGroup(){
+		String history = LogManager.getHistoryGroup(connectedGroup);
+		socOut.println(history);
+	}
+
 	public void typeGroup(){
 		String[] allGroup = LogManager.getUserGroups(username);
+		socOut.println("-------------------------");
 		for (int i=0; i<allGroup.length; i=i+2){
 			String groupName = allGroup[i];
-			socOut.println("-------------------------");
 			socOut.println("["+groupName+"]");
-			socOut.println(allGroup[i+1]+ " Members");
-			socOut.println(connectedUsersInGroup(groupName,username).size()+ " Connected");
+			addGroupMembers(groupName,Integer.valueOf(allGroup[i+1]));
+			socOut.println("-------------------------");
 		}
 	}
 
-	public void typeGroupMembers(){
-		String groupName = line.split(" ")[2];
+	public void addGroupMembers(String groupName, int groupNum){
 		String msg=LogManager.getGroupMembers(groupName,username);
 		List<String> connected = connectedUsersInGroup(groupName, username);
 		String connectedMembers = connected.stream()
 				.map(n -> String.valueOf(n))
 				.collect(Collectors.joining(", "));
 		if(msg == null){
-			socOut.println("The group name does not exist or you do not belong to this group");
+			socOut.println("Error: The group name does not exist or you do not belong to this group");
 		}else{
-			socOut.println("Members : "+msg);
-			socOut.println("Currently in group chat : "+connectedMembers);
+			socOut.println(groupNum+" members :"+msg);
+			socOut.println(connected.size()+" currently in group chat: "+connectedMembers);
 		}
 	}
 
 	public void typeGroupCreate(){
+		if(line.split(" ").length<3){
+			socOut.println("Your command doesn't make sense. Check /help for more details");
+			return;
+		}
 		String groupName = line.split(" ")[2];
 		if(LogManager.findGroupInFile(groupName,username)){
 			socOut.println("Group ["+groupName+"] created");
 		}else{
-			socOut.println("Group name already exist");
+			socOut.println("Error: Group name already exist");
 		}
 	}
 
 	public void typeGroupAddMember(){
-		boolean succeed = true;
+		if(line.split(" ").length<3){
+			socOut.println("Your command doesn't make sense. Check /help for more details");
+			return;
+		}
 		String groupName = line.split(" ")[2];
+
 		//Check if group exist
 		if (!LogManager.groupExist(groupName)) {
-			socOut.println("Group name doesn't exist");
+			socOut.println("Error: Group name doesn't exist");
+			return;
 		} else {
 			if (!LogManager.isGroupOwner(groupName, username)) {
 				socOut.println("Error: You don't have the permission to add people to this group");
+				return;
 
 			} else {
 				String[] addedPeople = line.substring(line.indexOf(groupName) + groupName.length() + 1).split(" ");
@@ -301,16 +317,16 @@ public class ClientThread
 				//Check if every username exist
 				for (String name : addedPeople) {
 					if (!LogManager.userExist(name)) {
-						socOut.println("Error: User doesn't exist");
-						succeed = false;
-						break;
+						socOut.println("Error: At least one of the username doesn't exist");
+						return;
 					}
 				}
 
-				if (succeed && LogManager.addPeopleToGroup(groupName, addedPeople)) {
+				if (LogManager.addPeopleToGroup(groupName, addedPeople)) {
 					socOut.println(Stream.of(addedPeople).collect(Collectors.joining(",")) + " added to group [" + groupName + "]");
 				}else{
 					socOut.println("Error: You can't add people who are already on the group");
+					return;
 				}
 
 			}
@@ -318,32 +334,35 @@ public class ClientThread
 	}
 
 	public void typeGroupRemoveMember(){
+		if(line.split(" ").length<3){
+			socOut.println("Your command doesn't make sense. Check /help for more details");
+			return;
+		}
 		String groupName = line.split(" ")[2];
-		boolean succeed=true;
 
 		if (!LogManager.groupExist(groupName)) {
 			socOut.println("Error: Group name doesn't exist");
 		} else {
 			if (!LogManager.isGroupOwner(groupName, username)) {
 				socOut.println("Error: You don't have the permission to remove people from this group");
+				return;
 
 			} else {
 				String[] removedPeople = line.substring(line.indexOf(groupName) + groupName.length() + 1).split(" ");
-				System.out.println("wanna remove"+removedPeople[0]+" from"+groupName);
 
 				//Check if every username exist
 				for (String name : removedPeople) {
 					if (!LogManager.userExist(name)) {
 						socOut.println("User doesn't exist");
-						succeed = false;
-						break;
+						return;
 					}
 				}
 
-				if (succeed && LogManager.removePeopleFromGroup(groupName, removedPeople)) {
+				if (LogManager.removePeopleFromGroup(groupName, removedPeople)) {
 					socOut.println(Stream.of(removedPeople).collect(Collectors.joining(",")) + " removed from group [" + groupName + "]");
 				}else{
 					socOut.println("Error: You can't remove a person who doesn't belong to the group or yourself");
+					return;
 				}
 
 			}
@@ -351,9 +370,13 @@ public class ClientThread
 	}
 
 	public void typeGroupLeave(){
+		if(line.split(" ").length<3){
+			socOut.println("Your command doesn't make sense. Check /help for more details");
+			return;
+		}
 		String groupName = line.split(" ")[2];
 		if (!LogManager.groupExist(groupName)) {
-			socOut.println("Group name doesn't exist");
+			socOut.println("Error: Group name doesn't exist");
 		} else {
 
 			if(LogManager.leaveGroup(groupName,username)){
@@ -365,6 +388,12 @@ public class ClientThread
 	}
 
 	public void typeGroupConnect(){
+
+		if(line.split(" ").length<3){
+			socOut.println("Your command doesn't make sense. Check /help for more details");
+			return;
+		}
+
 		if(connectingToGroup){
 			socOut.println("Disconnected from group ["+connectedGroup+"]");
 
@@ -374,28 +403,29 @@ public class ClientThread
 			}
 		}
 
+
 		String groupName = line.split(" ")[2];
-		boolean succeed = true;
 
 		if (!LogManager.groupExist(groupName)) {
-			socOut.println("Group name doesn't exist");
+			socOut.println("Error: Group name doesn't exist");
+			return;
 		}else{
 			connectedGroup = groupName;
 			String[] members = LogManager.getGroupMembers(groupName, username).split(", ");
 			members[0] = members[0].substring(0,members[0].length()-7);
 			if(!Arrays.asList(members).contains(username)){
-				socOut.println("You don't belong to this group");
-				succeed = false;
+				socOut.println("Error: You don't belong to this group");
+				return;
 			}
 
-			if(succeed){
-				for (String name : members){
-					ClientThread thread = EchoServerMultiThreaded.getUserByUsername(name);
-					if(thread!=null && thread!=this && thread.connectingToGroup && thread.connectedGroup.equals(groupName)){
-						groupMembers.add(thread);
-					}
+			//Add connected members in group
+			for (String name : members){
+				ClientThread thread = EchoServerMultiThreaded.getUserByUsername(name);
+				if(thread!=null && thread!=this && thread.connectingToGroup && thread.connectedGroup.equals(groupName)){
+					groupMembers.add(thread);
 				}
 			}
+
 		}
 		socOut.println("Connected to group ["+groupName+"]");
 		for (ClientThread member : groupMembers){
@@ -415,7 +445,7 @@ public class ClientThread
 			}
 			connectingToGroup = false;
 		}else{
-			socOut.println("You didn't enter any group in the first place");
+			socOut.println("Error: You aren't currently connected to any group in the first place");
 		}
 	}
 
@@ -424,21 +454,25 @@ public class ClientThread
 		return;
 	}
 
-	public void typeGroupDelete(){
+	public void typeGroupDelete() {
 
+		if(line.split(" ").length<3){
+			socOut.println("Your command doesn't make sense. Check /help for more details");
+			return;
+		}
 		String groupName = line.split(" ")[2];
-		boolean succeed=true;
 
 		if (!LogManager.groupExist(groupName)) {
 			socOut.println("Error: Group name doesn't exist");
+			return;
 		} else {
 			if (!LogManager.isGroupOwner(groupName, username)) {
 				socOut.println("Error: You don't have the permission to delete this group");
+				return;
 
 			} else {
 
-
-				if (succeed && LogManager.deleteGroup(groupName)) {
+				if (LogManager.deleteGroup(groupName)) {
 					socOut.println("Group ["+groupName+ "] deleted");
 				}else{
 					socOut.println("Error: An error occurs while deleting a group");
@@ -453,15 +487,14 @@ public class ClientThread
 		socOut.println("/online                                              : show users who are currently online");
 		socOut.println("/msg <receiverUsername> <message>                    : send a private message to a user");
 		socOut.println("/r <message>                                         : send a private message to the last user who sent you a message");
-		socOut.println("/history                                             : show your log's history");
+		socOut.println("/history                                             : show your log's history or your group's history if you're connected to a group");
 		socOut.println("/group                                               : show details of all groups you belong to");
-		socOut.println("/group members <groupName>                           : show the name of the members of a group and see who's the group owner");
 		socOut.println("/group create <groupName>                            : create a new group");
 		socOut.println("/group delete <groupName>                            : delete a group if you're the group owner");
 		socOut.println("/group add <groupName> <username1> <username2> ...   : add members to a group if you're the group owner");
 		socOut.println("/group remove <groupName> <username1> <username2>... : remove members to a group if you're the group owner");
 		socOut.println("/group leave <groupName>                             : leave a group if you're not the group owner");
-		socOut.println("/group enter <groupName>                             : enter a group chat");
+		socOut.println("/group connect <groupName>                           : enter a group chat");
 		socOut.println("/group disconnect                                    : disconnect from the current group chat");
 		socOut.println("/quit                                                : quit the chat application");
 
