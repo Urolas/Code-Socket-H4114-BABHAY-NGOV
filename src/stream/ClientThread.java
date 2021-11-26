@@ -239,7 +239,7 @@ public class ClientThread
 	 */
 	public void typeMsg(){
 
-		if(line.split(" ").length<3){
+		if(line.split(" ").length<2){
 			socOut.println("Your command doesn't make sense. Check /help for more details");
 			return;
 		}
@@ -486,6 +486,7 @@ public class ClientThread
 		}
 		socOut.println("Connected to group ["+groupName+"]");
 		for (ClientThread member : groupMembers){
+			member.groupMembers.add(this);
 			member.socOut.println(username+" has joined from the groupChat");
 		}
 
@@ -501,6 +502,7 @@ public class ClientThread
 
 			//send message to anybody connected
 			for (ClientThread member : groupMembers) {
+				member.groupMembers.remove(this);
 				member.socOut.println(username + " just disconnected from the groupChat");
 			}
 			connectingToGroup = false;
