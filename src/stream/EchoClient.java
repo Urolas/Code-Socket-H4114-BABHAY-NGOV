@@ -1,8 +1,6 @@
-/***
- * EchoClient
- * Example of a TCP client 
- * Date: 10/01/04
- * Authors:
+/**
+ * EchoClient.java
+ * @authors Annie ABHAY, Sophanna NGOV
  */
 package stream;
 
@@ -10,20 +8,23 @@ import java.io.*;
 import java.net.*;
 
 
-
+/**
+ * Represents a client's device, connected to the chat-room server
+ */
 public class EchoClient {
 
 
   /**
   *  main method
   *  accepts a connection, receives a message from client then sends an echo to the client
+   * @param args includes the client's ip address and the server's port to connect to
   **/
     public static void main(String[] args) throws IOException {
 
         Socket echoSocket = null;
-        PrintStream socOut = null; //flux d'écriture
+        PrintStream socOut = null; //writing flow
         BufferedReader stdIn = null;
-        BufferedReader socIn = null; //flux de lecture
+        BufferedReader socIn = null; //reading flow
         ClientReceiver cR = null; //read received messages
 
         if (args.length != 2) {
@@ -32,7 +33,6 @@ public class EchoClient {
         }
 
         try {
-
 
       	    // creation socket ==> connexion
       	    echoSocket = new Socket(args[0],new Integer(args[1]).intValue());
@@ -43,6 +43,7 @@ public class EchoClient {
             cR = new ClientReceiver(echoSocket,socIn,socOut);
             cR.start();
 
+            //Ask for the client's username (no password for now, but it is easy to implement)
             System.out.print("Insert username :");
             String user;
             socOut.println(user = stdIn.readLine()); //send the username to the out flow
@@ -57,7 +58,8 @@ public class EchoClient {
                                + "the connection to:"+ args[0]);
             System.exit(1);
         }
-                             
+
+        // A loop that allows the device to write commands or to receive and read messages
         String line;
         while (true) {
         	line=stdIn.readLine();

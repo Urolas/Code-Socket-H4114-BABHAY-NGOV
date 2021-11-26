@@ -1,8 +1,6 @@
 /***
- * ClientThread
- * Example of a TCP server
- * Date: 14/12/08
- * Authors:
+ * ClientThread.java
+ * @authors Annie ABHAY, Sophanna NGOV
  */
 
 package stream;
@@ -16,6 +14,9 @@ import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Manages a client thread : read and write messages and run commands
+ */
 public class ClientThread
 	extends Thread {
 
@@ -145,6 +146,12 @@ public class ClientThread
         }
        }
 
+	/**
+	 * Reformat the message adding the username who sent it, time and color: for private messages
+	 * @param line the message to send
+	 * @param username the username of the message's writer
+	 * @return the reformatted string
+	 */
    	public String reformatMsg(String line, String username){
 		LocalDateTime now = LocalDateTime.now();
 		int hour = now.getHour();
@@ -152,6 +159,12 @@ public class ClientThread
 		return (ANSI_BLUE+" ["+hour+":"+minute+"] "+ username + ANSI_RESET + " : "+line);
   	}
 
+	/**
+	 * Reformat the message adding the username who sent it, time and color: for the group chat
+	 * @param line the message to send
+	 * @param username the username of the message's writer
+	 * @return the reformatted string
+	 */
 	public String reformatMsgGroup(String line, String username){
 		LocalDateTime now = LocalDateTime.now();
 		int hour = now.getHour();
@@ -159,6 +172,12 @@ public class ClientThread
 		return (ANSI_PURPLE+"["+connectedGroup+"]"+" ["+hour+":"+minute+"] "+ username + ANSI_RESET + " : "+line);
 	}
 
+	/**
+	 * Reformat the message adding the username who sent it, time and color: for the log/history
+	 * @param line the message to send
+	 * @param username the username of the message's writer
+	 * @return the reformatted string
+	 */
 	public String reformatMsgLog(String line, String username){
 		LocalDateTime now = LocalDateTime.now();
 		int hour = now.getHour();
@@ -175,6 +194,9 @@ public class ClientThread
 		this.lastMessageUsername = lastMessageUsername;
 	}
 
+	/**
+	 * When the user types /online, show every users online
+	 */
 	public void typeOnline(){
 
 		socOut.println("Users online: ");
@@ -185,6 +207,9 @@ public class ClientThread
 		}
 	}
 
+	/**
+	 * When the user types something while being connected to the group, send the message to everybody in that group
+	 */
 	public void typeMsgInGroup(){
 
 		if(line.startsWith("/msg ")||line.startsWith("/r ")){
@@ -209,6 +234,9 @@ public class ClientThread
 
 	}
 
+	/**
+	 * When the user types /msg or /r, send a private message
+	 */
 	public void typeMsg(){
 
 		if(line.split(" ").length<3){
@@ -247,16 +275,25 @@ public class ClientThread
 		}
 	}
 
+	/**
+	 * When the user types /history, show their personal log
+	 */
 	public void typeHistory(){
 		String history = LogManager.getHistory(username);
 		socOut.println(history);
 	}
 
+	/**
+	 * When the user types /history while being connected to a group, show the group's log
+	 */
 	public void typeHistoryGroup(){
 		String history = LogManager.getHistoryGroup(connectedGroup);
 		socOut.println(history);
 	}
 
+	/**
+	 * When the user types /group, show the details of all groups this user belong to
+	 */
 	public void typeGroup(){
 		String[] allGroup = LogManager.getUserGroups(username);
 		socOut.println("-------------------------");
@@ -268,6 +305,11 @@ public class ClientThread
 		}
 	}
 
+	/**
+	 * Show the names of the group's members and the online ones
+	 * @param groupName
+	 * @param groupNum
+	 */
 	public void addGroupMembers(String groupName, int groupNum){
 		String msg=LogManager.getGroupMembers(groupName,username);
 		List<String> connected = connectedUsersInGroup(groupName, username);
@@ -282,6 +324,9 @@ public class ClientThread
 		}
 	}
 
+	/**
+	 * When the user types /group create, create a new group
+	 */
 	public void typeGroupCreate(){
 		if(line.split(" ").length<3){
 			socOut.println("Your command doesn't make sense. Check /help for more details");
@@ -295,6 +340,9 @@ public class ClientThread
 		}
 	}
 
+	/**
+	 * When the user types /group add, add a member to the mentioned group (if they are the group's owner)
+	 */
 	public void typeGroupAddMember(){
 		if(line.split(" ").length<3){
 			socOut.println("Your command doesn't make sense. Check /help for more details");
@@ -333,6 +381,9 @@ public class ClientThread
 		}
 	}
 
+	/**
+	 * When the user types /group remove , remove a member form that group (if the user's the group' owner)
+	 */
 	public void typeGroupRemoveMember(){
 		if(line.split(" ").length<3){
 			socOut.println("Your command doesn't make sense. Check /help for more details");
@@ -369,6 +420,9 @@ public class ClientThread
 		}
 	}
 
+	/**
+	 * When a user types /group leave, remove them from the mentioned group
+	 */
 	public void typeGroupLeave(){
 		if(line.split(" ").length<3){
 			socOut.println("Your command doesn't make sense. Check /help for more details");
@@ -387,6 +441,9 @@ public class ClientThread
 		}
 	}
 
+	/**
+	 * When the user types /group connect, make them enter a group chat
+	 */
 	public void typeGroupConnect(){
 
 		if(line.split(" ").length<3){
@@ -435,6 +492,9 @@ public class ClientThread
 		connectingToGroup = true;
 	}
 
+	/**
+	 * When the user types /group disconnect, make them leave/disconnect from the current groupchat
+	 */
 	public void typeGroupDisconnect(){
 		if(connectingToGroup) {
 			socOut.println("Disconnected from group [" + connectedGroup + "]");
@@ -449,11 +509,17 @@ public class ClientThread
 		}
 	}
 
+	/**
+	 * When the user types /quit, force shut down their connexion (stop the EchoClient)
+	 */
 	public void typeQuit(){
 		EchoServerMultiThreaded.removeClientFromThreadList(this);
 		return;
 	}
 
+	/**
+	 * When the user types /group delete, delete the mentioned group (if the user's the group' owner)
+	 */
 	public void typeGroupDelete() {
 
 		if(line.split(" ").length<3){
@@ -482,6 +548,9 @@ public class ClientThread
 		}
 	}
 
+	/**
+	 * When the user types /help, show them the tutorial
+	 */
 	public void typeHelp(){
 
 		socOut.println("/online                                              : show users who are currently online");
@@ -500,6 +569,12 @@ public class ClientThread
 
 	}
 
+	/**
+	 * Find all users that are in the mentioned group and are currently online
+	 * @param groupName
+	 * @param username
+	 * @return the online users who belong to the group
+	 */
 	public List<String> connectedUsersInGroup(String groupName,String username){
 
 		List<String> users = new ArrayList<>();

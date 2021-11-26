@@ -1,8 +1,6 @@
 /***
- * EchoServer
- * Example of a TCP server
- * Date: 10/01/04
- * Authors:
+ * EchoServer.java
+ * @authors Annie Abhay, Sophanna NGOV
  */
 
 package stream;
@@ -12,13 +10,17 @@ import java.net.*;
 import java.util.List;
 import java.util.ArrayList;
 
+/**
+ * Manages the chat-room server while handling multiple client threads
+ */
 public class EchoServerMultiThreaded  {
 
 
 	private static List<ClientThread> clientThreadList = new ArrayList<>();
+
  	/**
-  	* main method
-  	* 
+  	* Main method. Runs the server and wait for a new client to connect to the port
+	 * @param args contains the number of the port the socket will pass through
   	**/
 	 public static void main(String args[]){
 
@@ -43,10 +45,19 @@ public class EchoServerMultiThreaded  {
 			}
 	 }
 
+	/**
+	 * Find the list containing the ClientThread of all the connected users
+	 * @return the list of all online users
+	 */
 	public static List<ClientThread> getClientThreadList() {
 		return clientThreadList;
 	}
 
+	/**
+	 * Search for the client thread that matches the username
+	 * @param username
+	 * @return the ClientThread of this username. return null if this username isn't online
+	 */
 	public static ClientThread getUserByUsername(String username){
 
 		 for (ClientThread client : clientThreadList){
@@ -57,6 +68,10 @@ public class EchoServerMultiThreaded  {
 		 return null;
 	}
 
+	/**
+	 * When the client disconnects with /quit, remove their name from the client list
+	 * @param ct the ClientThread of the user who will disconnect
+	 */
 	public static void removeClientFromThreadList(ClientThread ct){
 		clientThreadList.removeIf((ClientThread removableClient) -> removableClient == ct);
 	}

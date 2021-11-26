@@ -1,3 +1,7 @@
+/**
+ * LogManager.java
+ * @authors Annie ABHAY, Sophanna NGOV
+ */
 package stream;
 
 import java.io.*;
@@ -7,9 +11,16 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Manages the files and return the necessary information from these files
+ */
 public class LogManager {
 
-    //Search the user's name on allUsers.txt
+    /**
+     * Search the user's name on allUsers.txt
+     * @param username
+     * @return true or false if this User exist ( connected once before )
+     */
     public static boolean userExist(String username){
 
         boolean found = false;
@@ -33,9 +44,11 @@ public class LogManager {
         return found;
     }
 
-    //mode 0 : just existence
-    //mode 1 : add
-    //mode 2 : delete
+    /**
+     * Search the group's name on allGroups.txt
+     * @param groupName
+     * @return true or false if the group exists/has been created
+     */
     public static boolean groupExist(String groupName){
 
         boolean found = false;
@@ -59,7 +72,10 @@ public class LogManager {
         return found;
     }
 
-
+    /**
+     * Create a new log file for the user if the user didn't exist
+     * @param username
+     */
     //Check if user already exist if not create Log
     public static void findNameInFile(String username){
 
@@ -85,7 +101,11 @@ public class LogManager {
 
     }
 
-    //write a new line on the log txt file
+    /**
+     * Add a new line(new message) on the log txt file
+     * @param username
+     * @param message
+     */
     public static void writeOnUserLog(String username, String message){
 
         try (FileWriter fw = new FileWriter("logFiles/Log_"+username+".txt",true)) {
@@ -99,7 +119,11 @@ public class LogManager {
         }
     }
 
-    //read the log file
+    /**
+     * Read the log file and return the entire history
+     * @param username
+     * @return the entire history of this user personal log
+     */
     public static String getHistory(String username){
         String log="";
 
@@ -118,7 +142,12 @@ public class LogManager {
         return log;
     }
 
-    //read the group's log file
+
+    /**
+     * Read the group's history and return the entire group log
+     * @param groupName
+     * @return the entire group history
+     */
     public static String getHistoryGroup(String groupName){
         String log="";
 
@@ -138,7 +167,12 @@ public class LogManager {
     }
 
 
-    //Find group if it exists, if not, then create
+    /**
+     * If group doesn't exist, create it
+     * @param groupName
+     * @param creator the name of the group owner
+     * @return true if no problem, false if the group can't be created
+     */
     public static boolean findGroupInFile(String groupName, String creator){
 
         boolean found = groupExist(groupName);
@@ -166,7 +200,13 @@ public class LogManager {
         return false;
     }
 
-    //Check if group owner
+
+    /**
+     * Check if the username is a group owner
+     * @param groupName
+     * @param username
+     * @return true or false
+     */
     public static boolean isGroupOwner(String groupName, String username){
 
         boolean owner = false;
@@ -195,7 +235,13 @@ public class LogManager {
 
     }
 
-    //add people to group
+
+     /**
+     * Add a member to the group
+     * @param groupName
+     * @param people List of members to add to the group
+     * @return true if no problem, false if member can't be added
+     */
     public static boolean addPeopleToGroup(String groupName, String[] people){
 
         boolean success = true;
@@ -251,6 +297,11 @@ public class LogManager {
 
     }
 
+    /**
+     * Search for all the group this user belong to
+     * @param username
+     * @return the group names and members amount
+     */
     public static String[] getUserGroups(String username){
         String group="";
 
@@ -278,6 +329,12 @@ public class LogManager {
     }
 
 
+    /**
+     * Get the group members' usernames
+     * @param groupName
+     * @param username
+     * @return the names of members
+     */
     public static String getGroupMembers(String groupName, String username){
         String members = "";
 
@@ -305,6 +362,13 @@ public class LogManager {
 
     }
 
+    /**
+     * Search the list of members and find out if the mentioned username belong to this list
+     * @param groupName
+     * @param username
+     * @param line A line from allGroups.txt
+     * @return true or false
+     */
     public static boolean belongToGroup(String groupName, String username, String line){
         String[] people = line.substring(line.indexOf(groupName) + groupName.length() + 1).split(" ");
         if(Arrays.asList(people).contains(username)){
@@ -314,7 +378,13 @@ public class LogManager {
         }
     }
 
-    //remove people from group
+
+    /**
+     * Remove a member from the group
+     * @param groupName
+     * @param people the list of people to be removed
+     * @return true if removal completed, false if these members can't be removed
+     */
     public static boolean removePeopleFromGroup(String groupName, String[] people){
 
         boolean success = true;
@@ -374,6 +444,12 @@ public class LogManager {
 
     }
 
+    /**
+     * Remove the mentioned username from the group
+     * @param groupName
+     * @param username
+     * @return true if removal completed, false if errors occurred
+     */
     public static boolean leaveGroup(String groupName, String username){
 
         boolean success = true;
@@ -430,7 +506,11 @@ public class LogManager {
         return success;
     }
 
-    //write a new line on the GroupLog txt file
+    /**
+     * Add a new line of the GroupLog txt file
+     * @param groupName
+     * @param message the lines(message) to be added to the log
+     */
     public static void writeOnGroupLog(String groupName, String message){
 
         try (FileWriter fw = new FileWriter("logFiles/GroupLog_"+groupName+".txt",true)) {
@@ -444,6 +524,11 @@ public class LogManager {
         }
     }
 
+    /**
+     * Delete a group and its log file
+     * @param groupName
+     * @return true if no problem, false if the group can't be deleted
+     */
     public static boolean deleteGroup(String groupName){
         boolean success=true;
         File GroupLog = new File("logFiles/GroupLog_"+groupName+".txt");
